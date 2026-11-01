@@ -1,13 +1,13 @@
 name: Generate SeedHub RSS
 
-# 说明：本 Action 尝试在云端（GitHub 服务器 IP）抓取 seedog.cc 并刷新 feed.xml。
-# 由于 seedog.cc 有 Cloudflare，云端 IP 大概率被拦（与 rsseverything 同理），
-# 此时脚本会因提取不到条目而退出、不改写 feed.xml，本 Action 自动跳过提交，
-# 因此【不会破坏】已发布的 feed。真正稳定的更新请在本机跑 publish.bat 推送。
+# 主生成器：在 GitHub 仓库内定时抓取 seedog.cc 并重新生成 feed.xml。
+# 每 6 小时（UTC）自动跑一次；也可手动触发。
+# 若某次被 Cloudflare 拦截（提取不到条目），脚本不会改写 feed.xml，
+# 本流程会以「0 条目」判定并跳过提交，保留上一次成功的 feed，订阅不受影响。
 on:
   schedule:
-    - cron: "0 */6 * * *"   # 每 6 小时尝试一次（UTC）
-  workflow_dispatch:        # 也支持手动触发
+    - cron: "0 */6 * * *"   # 每 6 小时（UTC）一次
+  workflow_dispatch:        # 支持在 Actions 页面手动触发
 
 permissions:
   contents: write
@@ -30,22 +30,24 @@ jobs:
         continue-on-error: true
         run: python src/generate_feed.py
 
-      - name: Validate feed.xml (only proceed if it has items)
-        id: validate
+      - name: Validate & commit
         run: |
           python - <<'PY'
-          import xml.etree.ElementTree as ET, sys
+          import xml.etree.ElementTree as ET
           try:
-              t = ET.parse("feed.xml"); n = len(t.getroot().find("channel").findall("item"))
-          except Exception as e:
-              print("validate error:", e); n = 0
-          print("items =", n)
-          sys.exit(0 if n >= 1 else 1)
+              t = ET.parse("feed.xml")
+              n = len(t.getroot().find("channel").findall("item"))
+          except Exception:
+              n = 0
+          open("itemcount.txt", "w").write(str(n))
           PY
 
-      - name: Commit & push (if feed changed and valid)
-        if: success()
-        run: |
+          n=$(cat itemcount.txt)
+          if [ "$n" -lt 1 ]; then
+            echo "未提取到条目（可能被 Cloudflare 拦截），保留旧 feed.xml，跳过提交。"
+            exit 0
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase --autostash
@@ -53,6 +55,6 @@ jobs:
           if git diff --cached --quiet feed.xml; then
             echo "feed.xml 无变化，跳过提交"
           else
-            git commit -m "chore: refresh feed.xml (cloud action)"
+            git commit -m "chore: refresh feed.xml (scheduled)"
             git push
           fi
