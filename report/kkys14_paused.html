@@ -128,8 +128,10 @@
   <div class="card">
     <h2>六、需要你手动做的事</h2>
     <ol>
-      <li><b>推送本地提交</b>（当前仅本地 <code>be0529f</code>，未推 GitHub）：仓库目录双击 <code>publish.bat</code>，
-          或执行 <code>git push</code>。不推送也不影响现有订阅（线上 feed 内容基本一致）。</li>
+      <li><b>推送本地提交</b>（当前 <code>be0529f</code>、<code>9427466</code> 两个提交仅在本机）：
+          在仓库目录打开 PowerShell / CMD，执行 <code>git push origin main</code>。
+          <span style="color:#8a5a00">（本次自动推送失败：本机 <code>http_proxy=127.0.0.1:62259</code> 对 github.com 的 CONNECT 持续返回 502，直连亦不可达，属网络链路问题，非仓库问题。）</span>
+          不推送也不影响现有订阅——GitHub 上的 kkys14 本来就是禁用状态，线上 <code>seedog.xml</code> 内容一致。</li>
       <li><b>确认订阅地址</b>：Distill Web Monitor 里填 <span class="url">https://ghaner.github.io/FeedGenerater/seedog.xml</span>。</li>
       <li><b>以后要加新网址</b>：只改 <code>src/sources.json</code>（复制 seedog 或 kkys14 条目改 url + 正则），推送即自动生成 <code>&lt;name&gt;.xml</code>。</li>
       <li><b>以后要重启 kkys14</b>：按 README 第六节 5 步走，先调通 SPA 等待再改 <code>enabled:true</code>。</li>
