@@ -25,7 +25,7 @@ seedog-rss/
 1. 在 GitHub 新建一个**公开（Public）**仓库，命名为 `seedog-rss`（名字随意，记住它）。
 2. 在本机仓库目录执行：
    ```bash
-   git remote add origin https://github.com/<你的用户名>/seedog-rss.git
+   git remote add origin https://github.com/ghaner/FeedGenerater.git
    git push -u origin main
    ```
 3. 推送后，`feed.xml` 已随仓库提交；GitHub Actions 之后会自动定时刷新它。
@@ -34,7 +34,7 @@ seedog-rss/
 1. 进入仓库 **Settings → Pages**（或 Settings → Code and automation → Pages）。
 2. **Build and deployment → Source** 选 **Deploy from a branch**。
 3. **Branch** 选 `main`，目录选 **`/ (root)`**，保存。
-4. 稍等一两分钟，访问 `https://<你的用户名>.github.io/seedog-rss/feed.xml` 应能见到 RSS XML。
+4. 稍等一两分钟，访问 `https://ghaner.github.io/FeedGenerater/feed.xml` 应能见到 RSS XML。
 5. 把这个 URL 填进 Distill Web Monitor 的 **Feed → GET** 输入框即可订阅。
 
 > 若访问后是下载文件而非网页，属正常——RSS 阅读器/Distill 会按 XML 解析。

@@ -42,5 +42,5 @@ if errorlevel 1 (
 ) else (
   echo [4/4] feed.xml 无变化，无需推送。
 )
-echo 完成。订阅地址：https://<你的GitHub用户名>.github.io/<仓库名>/feed.xml
+echo 完成。订阅地址：https://ghaner.github.io/FeedGenerater/feed.xml
 pause
