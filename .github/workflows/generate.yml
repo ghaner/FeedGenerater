@@ -1,8 +1,9 @@
 name: Generate SeedHub RSS
 
-# 主生成器：在 GitHub 仓库内定时抓取 seedog.cc 并重新生成 feed.xml。
+# 主生成器：在 GitHub 仓库内定时抓取 seedog.cc 并重新生成 RSS。
+# feed 文件名由站点域名自动推导（seedog.cc -> seedog.xml），详见 src/generate_feed.py 的 domain_to_filename。
 # 每 6 小时（UTC）自动跑一次；也可手动触发。
-# 若某次被 Cloudflare 拦截（提取不到条目），脚本不会改写 feed.xml，
+# 若某次被 Cloudflare 拦截（提取不到条目），脚本不会改写 feed 文件，
 # 本流程会以「0 条目」判定并跳过提交，保留上一次成功的 feed，订阅不受影响。
 on:
   schedule:
@@ -30,12 +31,18 @@ jobs:
         continue-on-error: true
         run: python src/generate_feed.py
 
+      - name: Compute feed filename (single source of truth)
+        id: meta
+        run: echo "name=$(python -c "import sys; sys.path.insert(0,'src'); import generate_feed as g; print(g.domain_to_filename(g.CONFIG['base']))")" >> "$GITHUB_OUTPUT"
+
       - name: Validate & commit
         run: |
-          python - <<'PY'
-          import xml.etree.ElementTree as ET
+          NAME="${{ steps.meta.outputs.name }}"
+          python - "$NAME" <<'PY'
+          import sys, xml.etree.ElementTree as ET
+          name = sys.argv[1]
           try:
-              t = ET.parse("feed.xml")
+              t = ET.parse(name)
               n = len(t.getroot().find("channel").findall("item"))
           except Exception:
               n = 0
@@ -44,17 +51,17 @@ jobs:
 
           n=$(cat itemcount.txt)
           if [ "$n" -lt 1 ]; then
-            echo "未提取到条目（可能被 Cloudflare 拦截），保留旧 feed.xml，跳过提交。"
+            echo "未提取到条目（可能被 Cloudflare 拦截），保留旧 ${NAME}，跳过提交。"
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase --autostash
-          git add feed.xml
-          if git diff --cached --quiet feed.xml; then
-            echo "feed.xml 无变化，跳过提交"
+          git add "$NAME"
+          if git diff --cached --quiet "$NAME"; then
+            echo "${NAME} 无变化，跳过提交"
           else
-            git commit -m "chore: refresh feed.xml (scheduled)"
+            git commit -m "chore: refresh ${NAME} (scheduled)"
             git push
           fi

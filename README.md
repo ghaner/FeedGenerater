@@ -3,17 +3,18 @@
 把 `https://seedog.cc/?order=update` 做成可被 **URL 订阅**的 RSS（供 Distill Web Monitor、Feedly、Fluent Reader 等只接受 URL 的阅读器使用）。
 
 > 背景：seedog.cc 有 **Cloudflare** 且无原生 RSS。rsseverything 的服务器/代理 IP 被 Cloudflare 拦成「Just a moment…」挑战页，且无法粘贴源码，路线被墙死。
-> 本仓库的解法：**由 GitHub Actions 在仓库内定时抓取 seedog.cc 生成 `feed.xml`，再由 GitHub Pages 提供公网 URL**；本机脚本仅作为备用刷新手段。
+> 本仓库的解法：**由 GitHub Actions 在仓库内定时抓取 seedog.cc 生成 RSS，再由 GitHub Pages 提供公网 URL**；本机脚本仅作为备用刷新手段。
+> feed 文件名由站点域名自动推导：`seedog.cc` → **`seedog.xml`**（改域名即自动改名，无需改其它文件）。
 
 ---
 
 ## 一、仓库结构
 ```
 seedog-rss/
-├── .github/workflows/generate.yml   # ★ 主生成器：每 6 小时（UTC）定时抓取并重新生成 feed.xml
+├── .github/workflows/generate.yml   # ★ 主生成器：每 6 小时（UTC）定时抓取并重新生成 RSS
 ├── src/generate_feed.py             # 主程序（仅 Python 标准库，无需 pip install）
-├── feed.xml                         # 生成的 RSS（由 GitHub Pages 托管，订阅地址即它）
-├── seedog_rss.bat                   # 本机一键生成并打开 feed.xml（备用）
+├── seedog.xml                       # 生成的 RSS（文件名由域名推导；由 GitHub Pages 托管，订阅地址即它）
+├── seedog_rss.bat                   # 本机一键生成并打开 seedog.xml（备用）
 ├── publish.bat                     # 本机生成 + git 提交 + 推送（备用刷新）
 ├── .gitignore                      # 已忽略 .workbuddy/ 与 build/
 └── README.md
@@ -28,13 +29,13 @@ seedog-rss/
    git remote add origin https://github.com/ghaner/FeedGenerater.git
    git push -u origin main
    ```
-3. 推送后，`feed.xml` 已随仓库提交；GitHub Actions 之后会自动定时刷新它。
+3. 推送后，`seedog.xml` 已随仓库提交；GitHub Actions 之后会自动定时刷新它。
 
 ### 步骤 2：开启 GitHub Pages
 1. 进入仓库 **Settings → Pages**（或 Settings → Code and automation → Pages）。
 2. **Build and deployment → Source** 选 **Deploy from a branch**。
 3. **Branch** 选 `main`，目录选 **`/ (root)`**，保存。
-4. 稍等一两分钟，访问 `https://ghaner.github.io/FeedGenerater/feed.xml` 应能见到 RSS XML。
+4. 稍等一两分钟，访问 `https://ghaner.github.io/FeedGenerater/seedog.xml` 应能见到 RSS XML。
 5. 把这个 URL 填进 Distill Web Monitor 的 **Feed → GET** 输入框即可订阅。
 
 > 若访问后是下载文件而非网页，属正常——RSS 阅读器/Distill 会按 XML 解析。
@@ -43,14 +44,14 @@ seedog-rss/
 
 **无需任何手动操作**：仓库内的 `.github/workflows/generate.yml` 会**每 6 小时（UTC）**自动：
 1. 在 GitHub 运行环境抓取 `seedog.cc`（携带完整浏览器 UA、跟随跳转）；
-2. 解析出 20 条影片、重新生成 `feed.xml`；
+2. 解析出 20 条影片、重新生成 `seedog.xml`；
 3. 仅在「提取到条目」时提交并推送；若被 Cloudflare 拦截（0 条目），则**跳过提交、保留上一次成功的 feed**，订阅不中断。
 
 - 首次启用后，Actions 页面可看到运行记录；也可在 **Actions → Generate SeedHub RSS → Run workflow** 手动触发一次立即刷新。
 - 周期可在 `generate.yml` 的 `cron: "0 */6 * * *"` 自行调整（标准 cron 表达式，UTC 时区）。
 
 ### 备用：本机手动刷新（当云端被拦时）
-双击 **`publish.bat`** 即可：生成 `feed.xml` → `git commit` → `git push`，Pages 自动更新。
+双击 **`publish.bat`** 即可：生成 `seedog.xml` → `git commit` → `git push`，Pages 自动更新。
 
 ## 四、提取字段
 | 字段 | 含义 |

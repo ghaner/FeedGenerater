@@ -15,13 +15,17 @@ if not defined PY (
   pause & exit /b 1
 )
 
-REM --- 2) 生成 feed.xml（脚本内部已做 Cloudflare/空结果校验）---
-echo [1/4] 生成 feed.xml ...
+REM --- 2) 生成 feed（脚本内部已做 Cloudflare/空结果校验）---
+echo [1/4] 生成 RSS ...
 "%PY%" "%~dp0src\generate_feed.py"
 if errorlevel 1 (
   echo [失败] 生成出错（可能本机 IP 也被 Cloudflare 质询）。未做任何改动。
   pause & exit /b 1
 )
+
+REM --- 2.5) 取 feed 文件名（与脚本同源：由域名推导，如 seedog.cc -> seedog.xml）---
+for /f "delims=" %%i in ('"%PY%" -c "import sys;sys.path.insert(0,'%~dp0src');import generate_feed as g;print(g.domain_to_filename(g.CONFIG['base']))"') do set "FEEDNAME=%%i"
+echo       feed 文件名：%FEEDNAME%
 
 REM --- 3) 先拉取远端最新（rebase，避免冲突）---
 echo [2/4] 拉取远端最新 ...
@@ -29,18 +33,18 @@ git pull --rebase --autostash || (
   echo [警告] git pull 失败，将继续尝试本地提交/推送。
 )
 
-REM --- 4) 提交并推送（仅当 feed.xml 有变化）---
+REM --- 4) 提交并推送（仅当 feed 文件有变化）---
 echo [3/4] 提交并推送 ...
-git add feed.xml
-git diff --cached --quiet feed.xml
+git add "%FEEDNAME%"
+git diff --cached --quiet "%FEEDNAME%"
 if errorlevel 1 (
-  git commit -m "chore: refresh feed.xml (local)"
+  git commit -m "chore: refresh %FEEDNAME% (local)"
   git push && echo [4/4] 已推送，GitHub Pages 将自动更新。 || (
     echo [失败] 推送被拒绝，请先 git pull 解决冲突后再运行。
     pause & exit /b 1
   )
 ) else (
-  echo [4/4] feed.xml 无变化，无需推送。
+  echo [4/4] %FEEDNAME% 无变化，无需推送。
 )
-echo 完成。订阅地址：https://ghaner.github.io/FeedGenerater/feed.xml
+echo 完成。订阅地址：https://ghaner.github.io/FeedGenerater/%FEEDNAME%
 pause

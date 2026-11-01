@@ -9,7 +9,8 @@ SeedHub「最近更新」RSS 生成器（本地版，绕开 Cloudflare）
 
 依赖：仅 Python 标准库（urllib + re + xml），无需 pip install。
 用法：python generate_feed.py
-输出：仓库根目录 feed.xml（由 GitHub Pages 以 https://<用户名>.github.io/<仓库>/feed.xml 提供公网订阅 URL）
+输出：仓库根目录 <域名>.xml（文件名由站点域名自动推导，如 seedog.cc → seedog.xml；由 GitHub Pages 以
+      https://<用户名>.github.io/<仓库>/seedog.xml 提供公网订阅 URL）
 
 提取逻辑（与 rsseverything 项目可重复搜索模式一一对应）：
   {%1} 海报图URL(绝对) | {%2} 详情相对链接 | {%3} 片名
@@ -21,6 +22,7 @@ import re
 import sys
 import datetime
 from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 from xml.sax.saxutils import escape
 
 # ===================== 参数配置区（按需修改） =====================
@@ -28,13 +30,26 @@ from xml.sax.saxutils import escape
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 
+
+def domain_to_filename(base_url):
+    """由站点域名推导 feed 文件名，作为唯一数据源：
+       seedog.cc       -> seedog.xml
+       www.example.com -> example.xml
+    取主机名的二级域名（倒数第二段）作文件名，避免硬编码 feed.xml。"""
+    host = (urlparse(base_url).hostname or "").lower()
+    labels = [p for p in host.split(".") if p]
+    slug = labels[-2] if len(labels) >= 2 else (labels[0] if labels else "feed")
+    return slug + ".xml"
+
+
 CONFIG = {
     "url": "https://seedog.cc/?order=update",   # 目标页（按最近更新排序）
-    "base": "https://seedog.cc",                 # 站点域名，用于把相对链接补成绝对地址
+    "base": "https://seedog.cc",                 # 站点域名：用于补全绝对链接，并推导 feed 文件名
     "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
           "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "timeout": 40,                               # 请求超时（秒）
-    "output": os.path.join(REPO_ROOT, "feed.xml"),  # 生成的 RSS 文件路径（仓库根，供 Pages 服务）
+    # 生成的 RSS 文件路径（仓库根，供 Pages 服务）；文件名由 base 域名自动推导（seedog.cc → seedog.xml）
+    "output": os.path.join(REPO_ROOT, domain_to_filename("https://seedog.cc")),
     "feed_title": "SeedHub 最近更新（影视&动漫）",
     "feed_desc": "SeedHub 影视&动漫分享站，按「最近更新」排序的影片 RSS 订阅源（本地生成，绕开 Cloudflare）。",
     "ttl": 60,                                   # 阅读器缓存分钟数
@@ -183,7 +198,7 @@ def main():
     print("[4/4] 样例校验（前 3 条）:")
     for it in items[:3]:
         print("      · %s | %s | 豆瓣:%s" % (it["title"], it["meta"], it["douban_rate"] or "暂无"))
-    print("✅ 完成。把 feed.xml 拖进 RSS 阅读器即可订阅；重跑本脚本可刷新。")
+    print("✅ 完成。把 %s 拖进 RSS 阅读器即可订阅；重跑本脚本可刷新。" % os.path.basename(CONFIG["output"]))
 
 
 if __name__ == "__main__":

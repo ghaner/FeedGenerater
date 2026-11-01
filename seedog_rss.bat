@@ -13,9 +13,9 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-if exist "%~dp0build\feed.xml" start "" "%~dp0build\feed.xml"
+if exist "%~dp0seedog.xml" start "" "%~dp0seedog.xml"
 echo.
-echo [完成] build\feed.xml 已生成并用默认程序打开。
-echo        把该文件拖进 RSS 阅读器即可订阅；重跑本脚本可刷新。
+echo [完成] seedog.xml 已生成并用默认程序打开（文件名由域名 seedog.cc 自动推导）。
+echo        该 URL 订阅版请用 publish.bat 推送到 GitHub Pages；重跑本脚本可刷新本地文件。
 echo        窗口将在 8 秒后自动关闭...
 timeout /t 8 /nobreak >nul
