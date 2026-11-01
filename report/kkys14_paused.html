@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>暂停 kkys14 源 · 多源引擎状态报告</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --ink:#1a1f27; --sub:#5b6472;
+    --line:#e3e7ee; --ok:#0f7b46; --okbg:#e8f6ee; --warn:#8a5a00; --warnbg:#fdf3e2;
+    --acc:#1f5fbf;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:32px 20px 60px;background:var(--bg);color:var(--ink);
+    font:15px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:940px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px;letter-spacing:.2px}
+  .meta{color:var(--sub);font-size:13px;margin-bottom:22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:20px 22px;margin:0 0 16px}
+  h2{font-size:17px;margin:0 0 12px;padding-left:10px;border-left:4px solid var(--acc)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--sub);font-weight:600;background:#fafbfc}
+  code{background:#f1f3f6;padding:1px 6px;border-radius:4px;font-size:13px;
+    font-family:Consolas,Monaco,monospace}
+  .tag{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .tag.ok{background:var(--okbg);color:var(--ok)}
+  .tag.warn{background:var(--warnbg);color:var(--warn)}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+  .kpi div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi b{display:block;font-size:20px;margin-bottom:2px}
+  .kpi span{color:var(--sub);font-size:12.5px}
+  ol,ul{margin:6px 0 0;padding-left:22px}
+  li{margin:5px 0}
+  .note{border-left:3px solid var(--warn);background:var(--warnbg);padding:10px 14px;
+    border-radius:0 8px 8px 0;color:#5a3d00;font-size:14px;margin-top:12px}
+  a{color:var(--acc)}
+  .url{word-break:break-all}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>暂停 kkys14 源 · 多源引擎状态报告</h1>
+  <div class="meta">仓库 <code>FeedGenerater</code> ｜ 提交 <code>be0529f</code> ｜ 2026-11-01</div>
+
+  <div class="kpi">
+    <div><b>1 个</b><span>当前产出 feed（seedog.xml）</span></div>
+    <div><b>20 条</b><span>seedog 实测提取条目</span></div>
+    <div><b>0 个</b><span>kkys14 产出文件（已暂停）</span></div>
+    <div><b>3 项</b><span>保留的引擎能力</span></div>
+  </div>
+
+  <div class="card">
+    <h2>一、结论</h2>
+    <ul>
+      <li><b>按你的要求，kkys14 不再出源</b>：<code>sources.json</code> 中该项改为 <code>enabled:false</code>，
+          运行时不访问站点、不生成任何 <code>kkys14.xml</code>。</li>
+      <li><b>多源引擎完整保留</b>：配置驱动（<code>sources.json</code>）、<code>generic</code> 正则解析、
+          <code>fetch:"browser"</code>（Playwright 过 JS 挑战）三项能力全部在位，随时可给新网址加源。</li>
+      <li><b>seedog 无回归</b>：本地实跑 20 条，XML 良构，线上订阅地址不受影响。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>二、当前源状态</h2>
+    <table>
+      <tr><th style="width:110px">name</th><th>网址</th><th style="width:150px">parser</th><th style="width:150px">状态</th></tr>
+      <tr>
+        <td><code>seedog</code></td>
+        <td class="url">https://seedog.cc/?order=update</td>
+        <td><code>seedog</code>（专用）</td>
+        <td><span class="tag ok">✅ 正常 · 20 条</span></td>
+      </tr>
+      <tr>
+        <td><code>kkys14</code></td>
+        <td class="url">https://www.kkys14.com/label/new.html（目标页）</td>
+        <td><code>generic</code> + <code>fetch:"browser"</code></td>
+        <td><span class="tag warn">⏸️ 已暂停 · 不出源</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>三、本次改了什么</h2>
+    <table>
+      <tr><th style="width:210px">文件</th><th>改动</th></tr>
+      <tr><td><code>src/sources.json</code></td>
+          <td>kkys14 改回 <code>enabled:false</code>；新增 <code>note</code> 如实记录「浏览器能过挑战，但生成器内取到 SPA 空壳 0 条」的现状与恢复前提。其余配置原样保留。</td></tr>
+      <tr><td><code>src/generate_feed.py</code></td>
+          <td>保留 <code>fetch_browser()</code>（Playwright + 去 webdriver 特征 + 挑战轮询 + <code>wait_selector</code>/<code>settle</code>），以及每条源的 <code>limit</code> 截断。对 seedog 的 urllib 路径无任何改动。</td></tr>
+      <tr><td><code>.gitignore</code></td>
+          <td>忽略 <code>test/*.html</code>、<code>test/*.txt</code>（约 340KB 调试快照），仅留 <code>test/capture_kkys14.py</code> 入库。</td></tr>
+      <tr><td><code>README.md</code></td>
+          <td>明确「暂停的是源，不是引擎」；补 <code>fetch</code>/<code>limit</code> 配置说明；第六节改为 kkys14 恢复清单（含真实卡点）。</td></tr>
+      <tr><td><code>test/capture_kkys14.py</code></td>
+          <td>保留浏览器抓取调试脚本，后续恢复时改个 url 即可复用。</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>四、验证结果（真实执行）</h2>
+    <ul>
+      <li>配置校验：<code>JSON OK, 源数: 2</code>（seedog <code>http</code> / kkys14 <code>false</code>）。</li>
+      <li>生成器实跑：seedog <b>提取 20 条</b> → 写入 <code>seedog.xml</code>；kkys14 打印「已在配置中禁用，跳过」。</li>
+      <li>产物校验：<code>seedog.xml: 20 条</code>，首条「小城良方」，XML 可解析；仓库根目录<b>仅 1 个</b> <code>.xml</code>，无 kkys14 残留文件。</li>
+      <li>线上订阅（未变）：<span class="url">https://ghaner.github.io/FeedGenerater/seedog.xml</span></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>五、kkys14 现状（如实记录，勿当已可用）</h2>
+    <table>
+      <tr><th style="width:150px">环节</th><th>实测结果</th></tr>
+      <tr><td>直连 urllib</td><td>HTTP 850 + <code>Protected by cdndefend, verifying your browser…</code>，拿不到真实页</td></tr>
+      <tr><td>Playwright 过挑战</td><td>✅ 能过，取到渲染后 HTML（首页 261KB，81 个 <code>a.v-item</code> 影片块）</td></tr>
+      <tr><td>首页正则离线验证</td><td>✅ 81 条，0 异常（已排除 <code>h-item</code> 专题块）</td></tr>
+      <tr><td>生成器内抓取</td><td>❌ 多次只返回未渲染空壳（约 15KB，0 个 <code>v-item</code>），<code>wait_selector</code> 命中过早</td></tr>
+      <tr><td>label/new.html 规则</td><td>⚠️ 未抓取、未验证（现有正则来自首页快照）</td></tr>
+    </table>
+    <div class="note">
+      真实瓶颈是「SPA 内容就绪判定」而不是「过反爬」。后续可用 <code>page.wait_for_function</code>
+      计数 <code>document.querySelectorAll('a.v-item').length &gt; N</code> 再取 <code>content()</code>，比等元素存在可靠。
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>六、需要你手动做的事</h2>
+    <ol>
+      <li><b>推送本地提交</b>（当前仅本地 <code>be0529f</code>，未推 GitHub）：仓库目录双击 <code>publish.bat</code>，
+          或执行 <code>git push</code>。不推送也不影响现有订阅（线上 feed 内容基本一致）。</li>
+      <li><b>确认订阅地址</b>：Distill Web Monitor 里填 <span class="url">https://ghaner.github.io/FeedGenerater/seedog.xml</span>。</li>
+      <li><b>以后要加新网址</b>：只改 <code>src/sources.json</code>（复制 seedog 或 kkys14 条目改 url + 正则），推送即自动生成 <code>&lt;name&gt;.xml</code>。</li>
+      <li><b>以后要重启 kkys14</b>：按 README 第六节 5 步走，先调通 SPA 等待再改 <code>enabled:true</code>。</li>
+    </ol>
+  </div>
+
+</div>
+</body>
+</html>
