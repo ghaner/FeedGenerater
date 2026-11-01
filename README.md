@@ -15,7 +15,7 @@ FeedGenerater/
 │   ├── generate_feed.py             # 主程序（仅 Python 标准库，无需 pip install）
 │   └── sources.json                 # ★ 站点配置：新增网址只改这里
 ├── seedog.xml                      # 生成的 RSS（seedog.cc，已由 Pages 托管）
-├── kkys14.xml                      # （待启用：受 cdndefend 保护，暂未生成）
+├── test/capture_kkys14.py          # 调试脚本：浏览器抓取（暂停中的 kkys14 后续攻坚用）
 ├── seedog_rss.bat                  # 本机一键生成并打开所有 *.xml（备用预览）
 ├── publish.bat                     # 本机生成 + git 提交 + 推送（备用刷新）
 ├── .gitignore
@@ -25,12 +25,18 @@ FeedGenerater/
 ## 二、当前已配置的源（sources.json）
 | name | 网址 | parser | 状态 |
 |---|---|---|---|
-| `seedog` | https://seedog.cc/?order=update | `seedog`（专用，已验证） | ✅ 正常，生成 `seedog.xml` |
-| `kkys14` | https://www.kkys14.com/ | `generic` | ⏸️ 已禁用（`enabled:false`），原因见下 |
+| `seedog` | https://seedog.cc/?order=update | `seedog`（专用，已验证） | ✅ 正常，生成 `seedog.xml`（20 条） |
+| `kkys14` | https://www.kkys14.com/label/new.html（目标页） | `generic` + `fetch:"browser"` | ⏸️ 已暂停（`enabled:false`），暂不出源，原因见下 |
 
-**kkys14 为何暂未启用**：该站受 **cdndefend JS 算力挑战**保护（HTTP 850 + “verifying your browser…”），
-`urllib`/`curl` 无法解出真实页面（必须真实浏览器跑 JS 拿放行 cookie）。因此无法在本仓库用纯 Python 抓取，
-其 `item_block` / `fields` 在 `sources.json` 里是**占位 TODO，未经验证**。要启用需先解决抓取（见第六节）。
+**kkys14 为何暂停**：该站是 **SPA + cdndefend JS 算力挑战**。`urllib` 直连只能拿到 HTTP 850 挑战页；
+生成器里已内置 `fetch:"browser"`（Playwright 跑 JS 过挑战、取渲染后 HTML，并支持 `wait_selector` / `settle` / `limit`），
+本机用浏览器确实能过挑战拿到渲染结果（对首页 HTML 离线验证出 81 条影片规则），
+但放进生成器流程后 `fetch_browser` 多次只返回**未渲染的空壳**（0 条），SPA 内容就绪的判定尚未调通。
+因此按用户要求**先暂停该源**，其余源不受任何影响；`sources.json` 中它的 `item_block` / `fields`
+仅对首页结构有效，对 `label/new.html` **未经验证**，恢复前必须重新校准。
+
+> 说明：暂停的是「kkys14 这个源」，**多源引擎完整保留**——`sources.json` 配置驱动、`generic` 正则解析、
+> `fetch:"browser"` 浏览器抓取三条能力都在，随时可给新网址加源。
 
 ## 三、让你的阅读器拿到 URL（两步）
 
@@ -71,18 +77,34 @@ FeedGenerater/
 ```
 - 字段 `abs:true` 会把相对链接用 `base` 补成绝对地址；`strip_tags:true` 去掉 HTML 标签。
 - `template` 是每条 `<description>` 的 HTML 卡片，`{字段名}` 会替换为提取结果。
+- `fetch` 可选值：
+  - `"http"`（默认）：`urllib` 直连，最快，适合无 JS 挑战的站点。
+  - `"browser"`：Playwright 无头浏览器，能跑 JS 过 cdndefend / Cloudflare 挑战、并等待 SPA 渲染完再取 HTML；
+    较慢，需要本机或 CI 先装 `pip install playwright && python -m playwright install chromium`，
+    并可配 `wait_selector`（等某元素出现）、`settle`（额外稳定秒数）、`limit`（最多取几条）。
+- `limit`：只保留前 N 条（首页常混入推荐位/专题位，用它控制条目数）。
 - 提交推送后，Actions 会自动开始生成 `mysite.xml`。
 
 ## 五、本机使用
 - **预览**：双击 `seedog_rss.bat` → 生成并打开所有 `*.xml`。
 - **推送刷新**：双击 `publish.bat` → 生成 → `git commit` → `git push`，Pages 自动更新。
 
-## 六、启用 kkys14（需先突破 cdndefend）
-1. 用无头浏览器（Playwright / Selenium）携带真实 UA 打开 `https://www.kkys14.com/`，等 JS 挑战通过；
-2. 取回渲染后的 HTML，定位影片条目块与字段，把 `sources.json` 里 kkys14 的 `item_block` / `fields` 填为真实正则；
-3. 把 `"enabled": false` 改为 `true`（或删除该键），提交推送即可。
+## 六、kkys14（已暂停，后续恢复步骤）
 
-> 注意：GitHub Actions 的运行环境 IP 同样大概率被 cdndefend 拦，因此即使填好规则，云端也可能需改用「浏览器抓取」步骤（超出当前纯 Python 方案范围）。
+现状（勿误判为「已可用」）：
+- 目标页：`https://www.kkys14.com/label/new.html`；`sources.json` 里该源 `enabled:false`，**不产出任何文件**。
+- 抓取能力已有：`fetch:"browser"` + `test/capture_kkys14.py`，本机能过 cdndefend 拿到渲染后 HTML。
+- 卡点：在生成器流程内 `fetch_browser` 多次只取到 SPA **未渲染的空壳**（0 条目），`wait_selector` 命中过早；
+  且现有正则来自**首页**快照，对 `label/new.html` 未验证。
+
+恢复时按序做：
+1. 用 `test/capture_kkys14.py`（把 url 改成 `.../label/new.html`）抓一份真实渲染 HTML，确认条目真实存在于 DOM；
+2. 针对该页重新推导 `item_block` / `fields`（注意排除 `h-item` 专题块，只认 `a.v-item` 影片块）；
+3. 修 `fetch_browser` 的 SPA 等待逻辑（例如等方法 `page.wait_for_function` 计数达阈值，而非仅等元素存在）；
+4. 本地跑 `python src/generate_feed.py` 确认 kkys14 稳定出条目后，再把 `enabled` 改回 `true`；
+5. 云端还需在 `generate.yml` 里加装 Playwright + Chromium 的步骤（CI 的 IP 同样可能被 cdndefend 拦）。
+
+> 备选更快路线：若该站实际有隐藏的 JSON 数据接口（XHR），直接改抓接口比解析 DOM 稳得多。
 
 ## 七、配置项与注意事项
 - `sources.json` 顶层 `ua` / `timeout` 为全局抓取参数。

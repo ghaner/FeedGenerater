@@ -7,3 +7,7 @@ build/
 # Python 缓存
 __pycache__/
 *.pyc
+
+# 调试抓取的页面快照（体积大，仅本地排查用，不入库）
+test/*.html
+test/*.txt

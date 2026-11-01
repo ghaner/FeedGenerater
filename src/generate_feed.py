@@ -141,6 +141,54 @@ def fetch(url, ua, timeout):
         return raw.decode("utf-8", errors="replace")
 
 
+def fetch_browser(url, ua, timeout, max_wait=40, wait_selector=None, settle=5):
+    """用 Playwright 无头浏览器跑 JS 通过反爬挑战（cdndefend / Cloudflare 等），返回渲染后的真实 HTML。
+    仅在源配置 fetch:"browser" 时调用；playwright 未安装或抓取失败会抛异常，由上层捕获后跳过该源。
+
+    wait_selector: 挑战解除后，再等待该 CSS 选择器出现（SPA 站点用它确认内容已渲染）。
+    settle: 额外稳定等待秒数，确保异步数据写入 DOM。
+    """
+    import time
+    from playwright.sync_api import sync_playwright
+
+    html = ""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--disable-blink-features=AutomationControlled", "--no-sandbox"],
+        )
+        ctx = browser.new_context(
+            user_agent=ua,
+            locale="zh-CN",
+            viewport={"width": 1280, "height": 800},
+        )
+        page = ctx.new_page()
+        # 抹掉 webdriver 特征，降低被识别为自动化的概率
+        page.add_init_script(
+            "Object.defineProperty(navigator,'webdriver',{get:()=>undefined})"
+        )
+        page.goto(url, wait_until="domcontentloaded", timeout=timeout * 1000)
+        # 轮询等待挑战解除（JS 算力挑战通常需要几秒）
+        deadline = time.time() + max_wait
+        while time.time() < deadline:
+            html = page.content()
+            low = html.lower()
+            if not any(m in low for m in CHALLENGE_MARKERS):
+                break
+            time.sleep(2)
+        # SPA 站点：等内容选择器出现 + 稳定时间，否则拿到的是空壳
+        if wait_selector:
+            try:
+                page.wait_for_selector(wait_selector, timeout=timeout * 1000)
+            except Exception:
+                pass
+        if settle:
+            time.sleep(settle)
+        html = page.content()
+        browser.close()
+    return html
+
+
 def build_rss(items, cfg):
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000")
     tpl = cfg.get("template", "<div>{title}<br>{link}</div>")
@@ -177,8 +225,18 @@ def process_source(cfg, ua, timeout):
         print("  ❌ 未知 parser: %s，跳过。" % cfg.get("parser"))
         return
 
+    fetch_mode = cfg.get("fetch", "http")
     try:
-        html = fetch(cfg["url"], ua, timeout)
+        if fetch_mode == "browser":
+            print("  🌐 使用浏览器抓取（攻克 JS 挑战）...")
+            html = fetch_browser(
+                cfg["url"], ua, timeout,
+                max_wait=cfg.get("max_wait", 40),
+                wait_selector=cfg.get("wait_selector"),
+                settle=cfg.get("settle", 5),
+            )
+        else:
+            html = fetch(cfg["url"], ua, timeout)
     except Exception as e:
         print("  ⚠️  抓取失败：%s（跳过，保留旧 feed）" % e)
         return
@@ -189,6 +247,8 @@ def process_source(cfg, ua, timeout):
         return
 
     items = parser(html, cfg)
+    if cfg.get("limit"):
+        items = items[: cfg["limit"]]
     print("      提取到 %d 条" % len(items))
     if not items:
         print("  ⚠️  未提取到条目（可能页面结构已变或被拦），跳过，保留旧 feed。")
