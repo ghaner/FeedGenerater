@@ -1,0 +1,58 @@
+name: Generate SeedHub RSS
+
+# 说明：本 Action 尝试在云端（GitHub 服务器 IP）抓取 seedog.cc 并刷新 feed.xml。
+# 由于 seedog.cc 有 Cloudflare，云端 IP 大概率被拦（与 rsseverything 同理），
+# 此时脚本会因提取不到条目而退出、不改写 feed.xml，本 Action 自动跳过提交，
+# 因此【不会破坏】已发布的 feed。真正稳定的更新请在本机跑 publish.bat 推送。
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # 每 6 小时尝试一次（UTC）
+  workflow_dispatch:        # 也支持手动触发
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Run generator (best-effort; Cloudflare block is expected & safe)
+        continue-on-error: true
+        run: python src/generate_feed.py
+
+      - name: Validate feed.xml (only proceed if it has items)
+        id: validate
+        run: |
+          python - <<'PY'
+          import xml.etree.ElementTree as ET, sys
+          try:
+              t = ET.parse("feed.xml"); n = len(t.getroot().find("channel").findall("item"))
+          except Exception as e:
+              print("validate error:", e); n = 0
+          print("items =", n)
+          sys.exit(0 if n >= 1 else 1)
+          PY
+
+      - name: Commit & push (if feed changed and valid)
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase --autostash
+          git add feed.xml
+          if git diff --cached --quiet feed.xml; then
+            echo "feed.xml 无变化，跳过提交"
+          else
+            git commit -m "chore: refresh feed.xml (cloud action)"
+            git push
+          fi

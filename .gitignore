@@ -1,0 +1,9 @@
+# 工作区记忆（含个人/项目记忆，禁止提交到公开仓库）
+.workbuddy/
+
+# 本地构建备份（根 feed.xml 才是发布产物）
+build/
+
+# Python 缓存
+__pycache__/
+*.pyc
