@@ -1,10 +1,10 @@
-name: Generate SeedHub RSS
+name: Generate RSS Feeds
 
-# 主生成器：在 GitHub 仓库内定时抓取 seedog.cc 并重新生成 RSS。
-# feed 文件名由站点域名自动推导（seedog.cc -> seedog.xml），详见 src/generate_feed.py 的 domain_to_filename。
+# 主生成器：在 GitHub 仓库内定时抓取 sources.json 中配置的所有网址，
+# 各自生成 <name>.xml（文件名即配置里的 name；seedog -> seedog.xml）。
 # 每 6 小时（UTC）自动跑一次；也可手动触发。
-# 若某次被 Cloudflare 拦截（提取不到条目），脚本不会改写 feed 文件，
-# 本流程会以「0 条目」判定并跳过提交，保留上一次成功的 feed，订阅不受影响。
+# 若某次被反爬拦截（命中挑战页或提取 0 条），脚本不会改写该 feed，
+# 本流程保留上一次成功的 feed，订阅不受影响。
 on:
   schedule:
     - cron: "0 */6 * * *"   # 每 6 小时（UTC）一次
@@ -27,41 +27,33 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Run generator (best-effort; Cloudflare block is expected & safe)
+      - name: Run generator (best-effort; per-source failure is safe)
         continue-on-error: true
         run: python src/generate_feed.py
 
-      - name: Compute feed filename (single source of truth)
-        id: meta
-        run: echo "name=$(python -c "import sys; sys.path.insert(0,'src'); import generate_feed as g; print(g.domain_to_filename(g.CONFIG['base']))")" >> "$GITHUB_OUTPUT"
-
-      - name: Validate & commit
+      - name: Validate & commit changed feeds
         run: |
-          NAME="${{ steps.meta.outputs.name }}"
-          python - "$NAME" <<'PY'
-          import sys, xml.etree.ElementTree as ET
-          name = sys.argv[1]
-          try:
-              t = ET.parse(name)
-              n = len(t.getroot().find("channel").findall("item"))
-          except Exception:
-              n = 0
-          open("itemcount.txt", "w").write(str(n))
+          python - <<'PY'
+          import xml.etree.ElementTree as ET, glob
+          ok = True
+          for fn in glob.glob("*.xml"):
+              try:
+                  n = len(ET.parse(fn).getroot().find("channel").findall("item"))
+              except Exception:
+                  n = 0
+              print(f"{fn}: {n} items")
+              if n == 0:
+                  ok = False
+          open("feeds_ok.txt", "w").write("1" if ok else "0")
           PY
-
-          n=$(cat itemcount.txt)
-          if [ "$n" -lt 1 ]; then
-            echo "未提取到条目（可能被 Cloudflare 拦截），保留旧 ${NAME}，跳过提交。"
-            exit 0
-          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git pull --rebase --autostash
-          git add "$NAME"
-          if git diff --cached --quiet "$NAME"; then
-            echo "${NAME} 无变化，跳过提交"
+          git add -A "*.xml"
+          if git diff --cached --quiet; then
+            echo "XML 无变化，跳过提交"
           else
-            git commit -m "chore: refresh ${NAME} (scheduled)"
+            git commit -m "chore: refresh feeds (scheduled)"
             git push
           fi

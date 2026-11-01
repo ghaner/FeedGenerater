@@ -1,0 +1,35 @@
+{
+  "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "timeout": 40,
+  "sources": [
+    {
+      "name": "seedog",
+      "parser": "seedog",
+      "url": "https://seedog.cc/?order=update",
+      "base": "https://seedog.cc",
+      "feed_title": "SeedHub 最近更新（影视&动漫）",
+      "feed_desc": "SeedHub 影视&动漫分享站，按「最近更新」排序的影片 RSS 订阅源（本地生成，绕开 Cloudflare）。",
+      "ttl": 60,
+      "template": "<div style=\"font-family:sans-serif;line-height:1.6;\"><a href=\"{link}\" target=\"_blank\"><img src=\"{poster}\" alt=\"{title}\" style=\"max-width:120px;float:left;margin:0 12px 8px 0;border-radius:6px;\"></a><p style=\"margin:0 0 6px;\"><b><a href=\"{link}\" target=\"_blank\">{title}</a></b></p><p style=\"margin:0 0 6px;color:#555;\">{meta}</p><p style=\"margin:0 0 6px;color:#555;\">{cats}</p><p style=\"margin:0;color:#888;\">豆瓣评分: <a href=\"{douban}\" target=\"_blank\">{rate}</a></p><div style=\"clear:both;\"></div></div>"
+    },
+    {
+      "name": "kkys14",
+      "parser": "generic",
+      "enabled": false,
+      "note": "站点受 cdndefend JS 算力挑战保护（HTTP 850 + 'Protected by cdndefend, verifying your browser...'），urllib/curl 无法抓取真实页；需改用无头浏览器（Playwright/Selenium）执行 JS 拿到放行 cookie 后才能抓取。提取规则需待真实 HTML 取得后补全。下方 item_block / fields 为占位，未经验证，启用前必须先填真实正作则。",
+      "url": "https://www.kkys14.com/",
+      "base": "https://www.kkys14.com",
+      "feed_title": "KKYS14 最近更新",
+      "feed_desc": "KKYS14 资源站 RSS 订阅源（待启用：需先解决 cdndefend JS 挑战）。",
+      "ttl": 60,
+      "item_block": "<TODO: 影片条目块正则，需含一个捕获组>",
+      "fields": {
+        "poster": {"pattern": "<TODO>", "group": 1, "abs": true},
+        "link":   {"pattern": "<TODO>", "group": 1, "abs": true},
+        "title":  {"pattern": "<TODO>", "group": 1, "strip_tags": true},
+        "meta":   {"pattern": "<TODO>", "group": 1, "strip_tags": true}
+      },
+      "template": "<div style=\"font-family:sans-serif;line-height:1.6;\"><a href=\"{link}\" target=\"_blank\"><img src=\"{poster}\" alt=\"{title}\" style=\"max-width:120px;float:left;margin:0 12px 8px 0;border-radius:6px;\"></a><p style=\"margin:0 0 6px;\"><b><a href=\"{link}\" target=\"_blank\">{title}</a></b></p><p style=\"margin:0 0 6px;color:#555;\">{meta}</p><div style=\"clear:both;\"></div></div>"
+    }
+  ]
+}

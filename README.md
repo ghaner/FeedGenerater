@@ -1,73 +1,91 @@
-# SeedHub「最近更新」RSS —— GitHub 仓库自动生成版
+# 通用「网址 → RSS」生成仓库（FeedGenerater）
 
-把 `https://seedog.cc/?order=update` 做成可被 **URL 订阅**的 RSS（供 Distill Web Monitor、Feedly、Fluent Reader 等只接受 URL 的阅读器使用）。
+把任意「按更新排序的列表页」做成可被 **URL 订阅**的 RSS（供 Distill Web Monitor、Feedly、Fluent Reader 等只接受 URL 的阅读器使用）。
+**一个仓库支持多个网址，每个网址生成一个独立的 `<name>.xml`**，新增网址只需改 `sources.json`，无需改代码。
 
-> 背景：seedog.cc 有 **Cloudflare** 且无原生 RSS。rsseverything 的服务器/代理 IP 被 Cloudflare 拦成「Just a moment…」挑战页，且无法粘贴源码，路线被墙死。
-> 本仓库的解法：**由 GitHub Actions 在仓库内定时抓取 seedog.cc 生成 RSS，再由 GitHub Pages 提供公网 URL**；本机脚本仅作为备用刷新手段。
-> feed 文件名由站点域名自动推导：`seedog.cc` → **`seedog.xml`**（改域名即自动改名，无需改其它文件）。
+> 背景：seedog.cc、kkys14.com 这类站点都没有原生 RSS。本仓库用 GitHub Actions 在仓库内定时抓取并生成 RSS，再由 GitHub Pages 提供公网 URL；本机脚本仅作备用刷新。
 
 ---
 
 ## 一、仓库结构
 ```
-seedog-rss/
-├── .github/workflows/generate.yml   # ★ 主生成器：每 6 小时（UTC）定时抓取并重新生成 RSS
-├── src/generate_feed.py             # 主程序（仅 Python 标准库，无需 pip install）
-├── seedog.xml                       # 生成的 RSS（文件名由域名推导；由 GitHub Pages 托管，订阅地址即它）
-├── seedog_rss.bat                   # 本机一键生成并打开 seedog.xml（备用）
+FeedGenerater/
+├── .github/workflows/generate.yml   # ★ 主生成器：每 6 小时（UTC）遍历所有源重新生成各自 *.xml
+├── src/
+│   ├── generate_feed.py             # 主程序（仅 Python 标准库，无需 pip install）
+│   └── sources.json                 # ★ 站点配置：新增网址只改这里
+├── seedog.xml                      # 生成的 RSS（seedog.cc，已由 Pages 托管）
+├── kkys14.xml                      # （待启用：受 cdndefend 保护，暂未生成）
+├── seedog_rss.bat                  # 本机一键生成并打开所有 *.xml（备用预览）
 ├── publish.bat                     # 本机生成 + git 提交 + 推送（备用刷新）
-├── .gitignore                      # 已忽略 .workbuddy/ 与 build/
+├── .gitignore
 └── README.md
 ```
 
-## 二、让你的阅读器拿到 URL（两步）
+## 二、当前已配置的源（sources.json）
+| name | 网址 | parser | 状态 |
+|---|---|---|---|
+| `seedog` | https://seedog.cc/?order=update | `seedog`（专用，已验证） | ✅ 正常，生成 `seedog.xml` |
+| `kkys14` | https://www.kkys14.com/ | `generic` | ⏸️ 已禁用（`enabled:false`），原因见下 |
 
-### 步骤 1：创建 GitHub 仓库并推送本仓库
-1. 在 GitHub 新建一个**公开（Public）**仓库，命名为 `seedog-rss`（名字随意，记住它）。
-2. 在本机仓库目录执行：
-   ```bash
-   git remote add origin https://github.com/ghaner/FeedGenerater.git
-   git push -u origin main
-   ```
-3. 推送后，`seedog.xml` 已随仓库提交；GitHub Actions 之后会自动定时刷新它。
+**kkys14 为何暂未启用**：该站受 **cdndefend JS 算力挑战**保护（HTTP 850 + “verifying your browser…”），
+`urllib`/`curl` 无法解出真实页面（必须真实浏览器跑 JS 拿放行 cookie）。因此无法在本仓库用纯 Python 抓取，
+其 `item_block` / `fields` 在 `sources.json` 里是**占位 TODO，未经验证**。要启用需先解决抓取（见第六节）。
 
-### 步骤 2：开启 GitHub Pages
-1. 进入仓库 **Settings → Pages**（或 Settings → Code and automation → Pages）。
-2. **Build and deployment → Source** 选 **Deploy from a branch**。
-3. **Branch** 选 `main`，目录选 **`/ (root)`**，保存。
-4. 稍等一两分钟，访问 `https://ghaner.github.io/FeedGenerater/seedog.xml` 应能见到 RSS XML。
-5. 把这个 URL 填进 Distill Web Monitor 的 **Feed → GET** 输入框即可订阅。
+## 三、让你的阅读器拿到 URL（两步）
 
-> 若访问后是下载文件而非网页，属正常——RSS 阅读器/Distill 会按 XML 解析。
+### 步骤 1：开启 GitHub Pages
+1. 仓库 **Settings → Pages**。
+2. **Build and deployment → Source** 选 **Deploy from a branch**；**Branch** 选 `main`，目录 **`/ (root)`**，保存。
+3. 稍等一两分钟，访问 `https://ghaner.github.io/FeedGenerater/seedog.xml` 应能见到 RSS XML。
+4. 把这个 URL 填进 Distill Web Monitor 的 **Feed → GET** 输入框即可订阅。
 
-## 三、如何保持更新（★ GitHub Action 自动完成）
+> 每个源对应一个文件：`https://ghaner.github.io/FeedGenerater/<name>.xml`（name 见 sources.json）。
 
-**无需任何手动操作**：仓库内的 `.github/workflows/generate.yml` 会**每 6 小时（UTC）**自动：
-1. 在 GitHub 运行环境抓取 `seedog.cc`（携带完整浏览器 UA、跟随跳转）；
-2. 解析出 20 条影片、重新生成 `seedog.xml`；
-3. 仅在「提取到条目」时提交并推送；若被 Cloudflare 拦截（0 条目），则**跳过提交、保留上一次成功的 feed**，订阅不中断。
+### 步骤 2：保持更新（★ GitHub Action 自动完成）
+无需任何手动操作：`generate.yml` 每 **6 小时（UTC）** 自动遍历所有启用源 → 抓取 → 重新生成各自 `*.xml` → 提交推送。
+- 若某次被反爬拦截（命中挑战页或提取 0 条），脚本**不覆盖**该 feed，保留上一次成功结果，订阅不中断。
+- 周期在 `generate.yml` 的 `cron: "0 */6 * * *"` 调整（标准 cron，UTC）。
+- 可在 **Actions → Generate RSS Feeds → Run workflow** 手动立即刷新。
 
-- 首次启用后，Actions 页面可看到运行记录；也可在 **Actions → Generate SeedHub RSS → Run workflow** 手动触发一次立即刷新。
-- 周期可在 `generate.yml` 的 `cron: "0 */6 * * *"` 自行调整（标准 cron 表达式，UTC 时区）。
+## 四、如何新增一个网址（核心用法）
+编辑 `src/sources.json`，在 `sources` 数组里加一条：
+```json
+{
+  "name": "mysite",                       // 生成的文件名将是 mysite.xml
+  "parser": "generic",                    // 规整站点用 generic；复杂站点可加专用 parser
+  "url": "https://example.com/?order=new",
+  "base": "https://example.com",
+  "feed_title": "我的站点 最近更新",
+  "feed_desc": "……",
+  "ttl": 60,
+  "item_block": "<div class=\"vod\">(.*?)</div>",   // 一个捕获组 = 一个条目块
+  "fields": {                                       // 各字段正则
+    "poster": {"pattern": "<img src=\"([^\"]+)\"", "group": 1, "abs": true},
+    "link":   {"pattern": "href=\"([^\"]+)\"", "group": 1, "abs": true},
+    "title":  {"pattern": "<h3>(.*?)</h3>", "group": 1, "strip_tags": true},
+    "meta":   {"pattern": "<span>(.*?)</span>", "group": 1, "strip_tags": true}
+  },
+  "template": "<div><a href=\"{link}\"><img src=\"{poster}\"></a><b>{title}</b><p>{meta}</p></div>"
+}
+```
+- 字段 `abs:true` 会把相对链接用 `base` 补成绝对地址；`strip_tags:true` 去掉 HTML 标签。
+- `template` 是每条 `<description>` 的 HTML 卡片，`{字段名}` 会替换为提取结果。
+- 提交推送后，Actions 会自动开始生成 `mysite.xml`。
 
-### 备用：本机手动刷新（当云端被拦时）
-双击 **`publish.bat`** 即可：生成 `seedog.xml` → `git commit` → `git push`，Pages 自动更新。
+## 五、本机使用
+- **预览**：双击 `seedog_rss.bat` → 生成并打开所有 `*.xml`。
+- **推送刷新**：双击 `publish.bat` → 生成 → `git commit` → `git push`，Pages 自动更新。
 
-## 四、提取字段
-| 字段 | 含义 |
-|---|---|
-| 海报 | 影片封面图（绝对 URL） |
-| 详情链接 | 补全为 `https://seedog.cc/movies/xxx/` 的绝对地址 |
-| 片名 | 影片名 |
-| 年份/类型/地区/语言/主演 | 如 `2026 / 剧集 / 中国大陆 / 汉语普通话 / 肖战 倪大红` |
-| 分类 | 类型标签（如 `类型: 剧情`） |
-| 豆瓣 | 豆瓣链接 + 评分（评分为 0 时显示「暂无」） |
+## 六、启用 kkys14（需先突破 cdndefend）
+1. 用无头浏览器（Playwright / Selenium）携带真实 UA 打开 `https://www.kkys14.com/`，等 JS 挑战通过；
+2. 取回渲染后的 HTML，定位影片条目块与字段，把 `sources.json` 里 kkys14 的 `item_block` / `fields` 填为真实正则；
+3. 把 `"enabled": false` 改为 `true`（或删除该键），提交推送即可。
 
-## 五、配置项
-集中在 `src/generate_feed.py` 顶部 `CONFIG`：`url` / `base` / `ua` / `timeout` / `output` / `feed_title` / `feed_desc` / `ttl`，一般无需改动。
+> 注意：GitHub Actions 的运行环境 IP 同样大概率被 cdndefend 拦，因此即使填好规则，云端也可能需改用「浏览器抓取」步骤（超出当前纯 Python 方案范围）。
 
-## 六、注意事项
-- 站点改版（如 cover 块标签变化）会使提取失效；云端 Action 会因此 0 条目并跳过，此时需同步更新 `generate_feed.py` 里的正则后重新推送。
-- 若 GitHub 运行环境的 IP 也被 Cloudflare 持续拦截（罕见，但可能），云端将无法刷新，可改用本机 `publish.bat` 兜底。
-- `.workbuddy/` 含本地记忆，**已被 .gitignore 排除，不会上传到公开仓库**。
-- 豆瓣评分为 0 表示站点尚未收录评分，已统一显示为「暂无」。
+## 七、配置项与注意事项
+- `sources.json` 顶层 `ua` / `timeout` 为全局抓取参数。
+- 站点改版（条目标签变化）会使提取失效；脚本会因此跳过该源、保留旧 feed，需同步更新对应正则。
+- `.workbuddy/` 含本地记忆，已被 `.gitignore` 排除，不会上传到公开仓库。
+- 豆瓣评分为 0 表示站点尚未收录，已统一显示为「暂无」。
