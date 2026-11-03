@@ -10,7 +10,7 @@
 ## 一、仓库结构
 ```
 FeedGenerater/
-├── .github/workflows/generate.yml   # ★ 主生成器：每 6 小时（UTC）遍历所有源重新生成各自 *.xml
+├── .github/workflows/generate.yml   # ★ 主生成器：每日零点（北京时间）遍历所有源重新生成各自 *.xml
 ├── src/
 │   ├── generate_feed.py             # 主程序（仅 Python 标准库，无需 pip install）
 │   └── sources.json                 # ★ 站点配置：新增网址只改这里
@@ -49,9 +49,9 @@ FeedGenerater/
 > 每个源对应一个文件：`https://ghaner.github.io/FeedGenerater/<name>.xml`（name 见 sources.json）。
 
 ### 步骤 2：保持更新（★ GitHub Action 自动完成）
-无需任何手动操作：`generate.yml` 每 **6 小时（UTC）** 自动遍历所有启用源 → 抓取 → 重新生成各自 `*.xml` → 提交推送。
+无需任何手动操作：`generate.yml` 每 **日零点（北京时间，即 UTC 16:00）** 自动遍历所有启用源 → 抓取 → 重新生成各自 `*.xml` → 提交推送。
 - 若某次被反爬拦截（命中挑战页或提取 0 条），脚本**不覆盖**该 feed，保留上一次成功结果，订阅不中断。
-- 周期在 `generate.yml` 的 `cron: "0 */6 * * *"` 调整（标准 cron，UTC）。
+- 周期在 `generate.yml` 的 `cron: "0 16 * * *"`（标准 cron，**UTC**）调整；若想改回 UTC 零点则写 `0 0 * * *`，想改回北京时间零点则写 `0 16 * * *`。
 - 可在 **Actions → Generate RSS Feeds → Run workflow** 手动立即刷新。
 
 ## 四、如何新增一个网址（核心用法）

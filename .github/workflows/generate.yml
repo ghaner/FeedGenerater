@@ -2,12 +2,12 @@ name: Generate RSS Feeds
 
 # 主生成器：在 GitHub 仓库内定时抓取 sources.json 中配置的所有网址，
 # 各自生成 <name>.xml（文件名即配置里的 name；seedog -> seedog.xml）。
-# 每 6 小时（UTC）自动跑一次；也可手动触发。
+# 每日零点（北京时间，即 UTC 16:00）自动跑一次；也可手动触发。
 # 若某次被反爬拦截（命中挑战页或提取 0 条），脚本不会改写该 feed，
 # 本流程保留上一次成功的 feed，订阅不受影响。
 on:
   schedule:
-    - cron: "0 */6 * * *"   # 每 6 小时（UTC）一次
+    - cron: "0 16 * * *"   # 每日零点（北京时间 UTC+8），即 UTC 16:00 一次
   workflow_dispatch:        # 支持在 Actions 页面手动触发
 
 permissions:
