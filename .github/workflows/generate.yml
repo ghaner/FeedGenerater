@@ -8,6 +8,7 @@ name: Generate RSS Feeds
 on:
   schedule:
     - cron: "0 16 * * *"   # 每日零点（北京时间 UTC+8），即 UTC 16:00 一次
+
   workflow_dispatch:        # 支持在 Actions 页面手动触发
 
 permissions:
