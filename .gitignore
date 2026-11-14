@@ -8,7 +8,11 @@ build/
 __pycache__/
 *.pyc
 
+# 本地密钥（cookie 等，禁止提交；云端用 GitHub Actions Secrets 同名变量）
+src/local_secrets.json
+
 # 调试抓取的页面快照（体积大，仅本地排查用，不入库）
 test/*.html
 test/*.txt
+test/kkys14_*
 test/cctv/

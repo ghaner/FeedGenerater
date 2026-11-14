@@ -30,6 +30,10 @@ jobs:
 
       - name: Run generator (best-effort; per-source failure is safe)
         continue-on-error: true
+        env:
+          # kkys14 的 cdndefend 挑战 cookie（sources.json 里以 ${KKYS14_COOKIE} 引用）。
+          # 需在仓库 Settings → Secrets and variables → Actions 里新建同名 Secret。
+          KKYS14_COOKIE: ${{ secrets.KKYS14_COOKIE }}
         run: python src/generate_feed.py
 
       - name: Validate & commit changed feeds

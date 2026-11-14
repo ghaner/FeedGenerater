@@ -14,8 +14,8 @@ WebFeedGitHubGenerater/
 ├── src/
 │   ├── generate_feed.py             # 主程序（仅 Python 标准库，无需 pip install）
 │   └── sources.json                 # ★ 站点配置：新增网址只改这里
-├── *.xml                           # 生成的 RSS（seedog / yszzq / yszzq_api / yszzq_jiexi / cctv_jkzl，已由 Pages 托管）
-├── test/capture_kkys14.py          # 调试脚本：浏览器抓取（暂停中的 kkys14 后续攻坚用）
+├── *.xml                           # 生成的 RSS（seedog / yszzq / yszzq_api / yszzq_jiexi / cctv_jkzl / kkys14，已由 Pages 托管）
+├── test/                           # 调试与探测脚本（推导抓取手段用，不参与正式生成）
 ├── seedog_rss.bat                  # 本机一键生成并打开所有 *.xml（备用预览）
 ├── publish.bat                     # 本机生成 + git 提交 + 推送（备用刷新）
 ├── .gitignore
@@ -30,17 +30,13 @@ WebFeedGitHubGenerater/
 | `yszzq_api` | https://www.yszzq.com/ziyuan/api/20_0_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq_api.xml`（**10 条/页，已过滤「失效」接口**，标题旁以灰色小标签标「赞助」） |
 | `yszzq_jiexi` | https://www.yszzq.com/ziyuan/jiexi/21_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq_jiexi.xml`（**11 条/页，已过滤「失效」接口**，含解析地址 / 收费 / 格式，标题旁标「赞助」） |
 | `cctv_jkzl` | https://tv.cctv.com/lm/jkzl/index.shtml（接口：`api.cntv.cn/NewVideo/getVideoListByColumn`） | `json`（已验证） | ✅ 正常，生成 `cctv_jkzl.xml`（**50 条**，含播出时间 `pubDate`、时长、节目简介、竖版海报） |
-| `kkys14` | https://www.kkys14.com/label/new.html（目标页） | `generic` + `fetch:"browser"` | ⏸️ 已暂停（`enabled:false`），暂不出源，原因见下 |
+| `kkys14` | https://www.kkys14.com/label/new.html | `generic` + cookie 直连 | ✅ 正常，生成 `kkys14.xml`（**24 条**，含竖版海报） |
 
-**kkys14 为何暂停**：该站是 **SPA + cdndefend JS 算力挑战**。`urllib` 直连只能拿到 HTTP 850 挑战页；
-生成器里已内置 `fetch:"browser"`（Playwright 跑 JS 过挑战、取渲染后 HTML，并支持 `wait_selector` / `settle` / `limit`），
-本机用浏览器确实能过挑战拿到渲染结果（对首页 HTML 离线验证出 81 条影片规则），
-但放进生成器流程后 `fetch_browser` 多次只返回**未渲染的空壳**（0 条），SPA 内容就绪的判定尚未调通。
-因此按用户要求**先暂停该源**，其余源不受任何影响；`sources.json` 中它的 `item_block` / `fields`
-仅对首页结构有效，对 `label/new.html` **未经验证**，恢复前必须重新校准。
-
-> 说明：暂停的是「kkys14 这个源」，**多源引擎完整保留**——`sources.json` 配置驱动、`generic` 正则解析、
-> `fetch:"browser"` 浏览器抓取三条能力都在，随时可给新网址加源。
+**kkys14 怎么通的**：该站有 cdndefend JS 算力挑战，直连会得到 HTTP 850 挑战页；但**挑战通过后发放的
+`cdndefend_js_cookie` 是静态值**（多轮独立会话取值一致），带上它 `urllib` 直连即返回 200 与完整的**服务端渲染 HTML**
+（实测 1.06 秒 / 24 条，且不校验 UA）。所以这个源**不需要 Playwright、也不需要等 SPA 渲染**。
+站点另有反调试跳转（约 3.9 秒后跳到百度），这正是原先"取到 0 条"的真正原因；现在完全绕过 DOM，不受影响。
+cookie 若被站点轮换，`cookie_recovery` 会自动用浏览器刷新一次后重连（详见第六章）。
 
 ## 三、让你的阅读器拿到 URL（两步）
 
@@ -86,7 +82,11 @@ WebFeedGitHubGenerater/
   - `"browser"`：Playwright 无头浏览器，能跑 JS 过 cdndefend / Cloudflare 挑战、并等待 SPA 渲染完再取 HTML；
     较慢，需要本机或 CI 先装 `pip install playwright && python -m playwright install chromium`，
     并可配 `wait_selector`（等某元素出现）、`settle`（额外稳定秒数）、`limit`（最多取几条）。
+    注意：`generate.yml` **当前没有**安装 Playwright 的步骤（现有源都走 http/json），若启用 browser 源需自行加装。
 - `limit`：只保留前 N 条（首页常混入推荐位/专题位，用它控制条目数）。
+- 源级 `headers`：自定义请求头，如 `{"Cookie": "cdndefend_js_cookie=..."}`。用于「挑战页发放静态 cookie 后即可直连」的站点，不填则不发额外头（行为与原来一致）。
+- `cookie_recovery` / `cookie_name` / `cookie_wait`：cookie 自愈开关与参数，见第六章。
+- 字段级 `base`：`fields.<名>.base` 可单独指定补全域名，用于「正文在主域、图片在另一台域名」的站（kkys14 的海报就走 `vres.*`）。不填则回落到源级 `base`。
 - 提交推送后，Actions 会自动开始生成 `mysite.xml`。
 
 ### 4.1 站点有 JSON 接口时用 `parser:"json"`（比解析 HTML 稳得多）
@@ -130,22 +130,47 @@ WebFeedGitHubGenerater/
 - **预览**：双击 `seedog_rss.bat` → 生成并打开所有 `*.xml`。
 - **推送刷新**：双击 `publish.bat` → 生成 → `git commit` → `git push`，Pages 自动更新。
 
-## 六、kkys14（已暂停，后续恢复步骤）
+## 六、kkys14 的 cookie 通道（原理与维护）
 
-现状（勿误判为「已可用」）：
-- 目标页：`https://www.kkys14.com/label/new.html`；`sources.json` 里该源 `enabled:false`，**不产出任何文件**。
-- 抓取能力已有：`fetch:"browser"` + `test/capture_kkys14.py`，本机能过 cdndefend 拿到渲染后 HTML。
-- 卡点：在生成器流程内 `fetch_browser` 多次只取到 SPA **未渲染的空壳**（0 条目），`wait_selector` 命中过早；
-  且现有正则来自**首页**快照，对 `label/new.html` 未验证。
+### 原理（2026-11-14 实测结论）
+- `/label/new.html` 是**服务端渲染**，不是 SPA：挑战通过后主文档直接返回完整 HTML（约 87KB、24 条 `a.v-item`）。
+  监听全部网络请求只有 2 个 JSON（站点公告、广告位配置），**没有任何影片数据接口**。
+- 静态直连 → HTTP 850 挑战页；挑战通过后浏览器拿到 `cdndefend_js_cookie`，该值是**静态的**
+  （3 轮独立会话取值完全一致，`expires=-1`），带上它直连即 200，且换任意 UA 都有效。
+- 站点有反调试跳转：约 **3.9 秒后页面自动跳往 `www.baidu.com`**。所以「等渲染后取 DOM」只有约 1 秒窗口，
+  极易拿到百度页；走 cookie 直连则完全不受影响。这也是原先"提取 0 条"的真正原因（不是 SPA 未渲染）。
 
-恢复时按序做：
-1. 用 `test/capture_kkys14.py`（把 url 改成 `.../label/new.html`）抓一份真实渲染 HTML，确认条目真实存在于 DOM；
-2. 针对该页重新推导 `item_block` / `fields`（注意排除 `h-item` 专题块，只认 `a.v-item` 影片块）；
-3. 修 `fetch_browser` 的 SPA 等待逻辑（例如等方法 `page.wait_for_function` 计数达阈值，而非仅等元素存在）；
-4. 本地跑 `python src/generate_feed.py` 确认 kkys14 稳定出条目后，再把 `enabled` 改回 `true`；
-5. 云端还需在 `generate.yml` 里加装 Playwright + Chromium 的步骤（CI 的 IP 同样可能被 cdndefend 拦）。
+### 当前配置（sources.json 对应片段）
+```json
+"headers": {"Cookie": "${KKYS14_COOKIE}"},
+"cookie_recovery": true,
+"cookie_name": "cdndefend_js_cookie",
+"cookie_wait": 4
+```
 
-> 备选更快路线：若该站实际有隐藏的 JSON 数据接口（XHR），直接改抓接口比解析 DOM 稳得多。
+cookie **不写进仓库**，通过环境变量 `KKYS14_COOKIE` 注入（值形如 `cdndefend_js_cookie=<45位值>`）：
+
+| 运行环境 | 注入方式 |
+|---|---|
+| 本机 | `src/local_secrets.json`（已加入 `.gitignore`）：`{"KKYS14_COOKIE": "cdndefend_js_cookie=..."}`，生成器启动时自动载入 |
+| GitHub Actions | 仓库 **Settings → Secrets and variables → Actions → New repository secret**，名称 `KKYS14_COOKIE`；`generate.yml` 已把它作为同名环境变量传入 |
+
+> 环境变量缺失时日志会打印 `⚠️ 环境变量未设置：KKYS14_COOKIE`，并尝试用浏览器刷新 cookie；CI 未装 playwright 时该源被跳过、旧 feed 保留。
+
+### cookie 失效了怎么换
+现象：日志出现 `⚠️ 直连结果无效（HTTP Error 850）`，随后自动刷新重连。若刷新也失败（例如未装 playwright），
+该源会被跳过、旧 `kkys14.xml` 保留，订阅不中断。更新只需两步：
+1. 浏览器打开 `https://www.kkys14.com/label/new.html`，等页面加载完；
+2. F12 → Application → Cookies → `https://www.kkys14.com` → 复制 `cdndefend_js_cookie` 的值，拼成
+   `cdndefend_js_cookie=<值>`，写进本机 `src/local_secrets.json` 的 `KKYS14_COOKIE`；
+   云端则到 **Settings → Secrets → KKYS14_COOKIE** 更新为同一字符串。
+
+> 辅助脚本：`test/probe_kkys14_cookie_stability.py`（批量取 cookie 并校验一致性与可用性）、
+> `test/probe_kkys14_timeline.py`（复现页面跳转时序）、`test/verify_kkys14_pure_http.py`（验证纯 HTTP 通道）。
+
+### 为什么不再用 fetch:"browser"
+浏览器通道要与「3.9 秒跳百度」抢时间，站点一改跳转时机就失效；cookie 通道 1 秒完成，CI 也不必装 chromium。
+`fetch:"browser"` 能力仍保留在生成器中，供其他 SPA 站点使用。
 
 ## 七、配置项与注意事项
 - `sources.json` 顶层 `ua` / `timeout` 为全局抓取参数。

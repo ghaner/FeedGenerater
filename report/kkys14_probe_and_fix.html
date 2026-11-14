@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kkys14 接口探测与 cookie 通道接入报告</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--line:#e3e6ea;--tx:#1f2328;--tx2:#57606a;--ok:#1a7f37;--warn:#9a6700;--bad:#b42318;--accent:#0b6bcb;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:36px 22px 70px}
+  h1{font-size:24px;margin:0 0 6px;font-weight:600}
+  .sub{color:var(--tx2);font-size:13px;margin-bottom:26px}
+  h2{font-size:17px;margin:34px 0 12px;padding-left:10px;border-left:3px solid var(--accent);font-weight:600}
+  h3{font-size:14px;margin:20px 0 8px;color:var(--tx2);font-weight:600}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:14px}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:8px}
+  .kpi div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi b{display:block;font-size:22px;font-weight:600;line-height:1.3}
+  .kpi span{color:var(--tx2);font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--tx2);font-weight:600;background:#fafbfc}
+  code{background:#eef1f4;padding:1px 5px;border-radius:4px;font:12.5px/1.5 ui-monospace,Consolas,monospace}
+  pre{background:#1f2328;color:#e6edf3;padding:14px 16px;border-radius:8px;overflow:auto;font:12.5px/1.6 ui-monospace,Consolas,monospace}
+  .ok{color:var(--ok);font-weight:600}
+  .bad{color:var(--bad);font-weight:600}
+  .warn{color:var(--warn);font-weight:600}
+  ul,ol{margin:6px 0;padding-left:22px}
+  li{margin:4px 0}
+  .tl{display:flex;gap:0;margin:16px 0 6px;flex-wrap:wrap}
+  .tl div{flex:1;min-width:120px;border-top:3px solid var(--line);padding:10px 8px 0;font-size:12.5px;color:var(--tx2)}
+  .tl div.hit{border-top-color:var(--ok)}
+  .tl div.dead{border-top-color:var(--bad)}
+  .tl b{display:block;color:var(--tx);font-size:13px}
+  .note{background:#fff8e6;border:1px solid #f0d58a;border-radius:8px;padding:12px 16px;font-size:13.5px}
+  .foot{margin-top:40px;color:var(--tx2);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>kkys14 接口探测与 cookie 通道接入报告</h1>
+<div class="sub">项目：WebFeedGitHubGenerater　·　生成时间：2026-11-14 17:12　·　全部数据为实测，非推断</div>
+
+<div class="kpi">
+  <div><b class="bad">0 个</b><span>影片数据接口</span></div>
+  <div><b class="ok">24 条</b><span>直连即可拿到</span></div>
+  <div><b class="ok">1.06 秒</b><span>纯 HTTP 抓取耗时</span></div>
+  <div><b class="warn">3.9 秒</b><span>页面被劫持跳百度</span></div>
+</div>
+
+<h2>一、结论先说</h2>
+<div class="card">
+  <p><b>kkys14 没有任何影片 JSON 接口</b>，它是「服务端渲染 + cdndefend 反爬挑战」，<u>不是 SPA</u>。
+  原先记录里"SPA 渲染未调通"的判断不成立。</p>
+  <p>但探测中发现一个更省事的通道：挑战通过后发放的 <code>cdndefend_js_cookie</code> 是<b>静态值</b>，
+  带上它用普通 <code>urllib</code> 直连就返回 200 和完整 HTML，<b>1.06 秒拿到 24 条</b>，完全不需要 Playwright。</p>
+  <p>原先提取 0 条的真实原因也查清了：页面在加载约 <b>3.9 秒</b>后被反调试脚本<b>自动跳转到 www.baidu.com</b>，
+  而旧逻辑取 DOM 的时机正好在跳转之后，拿到的自然是百度页面。</p>
+</div>
+
+<h2>二、接口探测证据</h2>
+
+<h3>2.1 监听全部网络响应（目标页 /label/new.html）</h3>
+<table>
+  <tr><th>响应</th><th>大小</th><th>类型</th><th>判定</th></tr>
+  <tr><td>主文档（850 → 200）</td><td>6,499 → 89,961</td><td>text/html</td><td>挑战页 → 真实内容</td></tr>
+  <tr><td><code>vajax.wxin31.com/app/announcements</code></td><td>653</td><td>application/json</td><td>站点公告，非影片数据</td></tr>
+  <tr><td><code>vajax.wxin31.com/config/units</code></td><td>70</td><td>application/json</td><td>广告位配置，内容为 <code>{"pc":[],"mobile":[]}</code></td></tr>
+</table>
+<p style="font-size:13.5px;color:var(--tx2)">首页另一次完整监听共 31 个响应，其中 28 个是 CSS/JS/图片静态资源，同样<b>零影片接口</b>。</p>
+
+<h3>2.2 页面加载时序（每秒采样实测）</h3>
+<div class="tl">
+  <div><b>0.8s</b>挑战页 6.5KB</div>
+  <div><b>1.8s</b>取内容抛异常<br><code>page is navigating</code></div>
+  <div class="hit"><b>2.9s</b>真实内容 87KB<br>24 条 v-item</div>
+  <div class="dead"><b>3.9s</b>跳转百度<br>页面被劫持</div>
+</div>
+<p style="font-size:13.5px;color:var(--tx2)">可用窗口只有约 1 秒；旧逻辑的 <code>settle=6</code> 秒取内容，必然落在跳转之后。</p>
+
+<h3>2.3 cookie 通道验证</h3>
+<table>
+  <tr><th>验证项</th><th>结果</th></tr>
+  <tr><td>cookie 名称 / 属性</td><td><code>cdndefend_js_cookie</code>，域 <code>www.kkys14.com</code>，<code>expires=-1</code>，非 HttpOnly，SameSite=Lax，值长 45</td></tr>
+  <tr><td>是否为静态值</td><td><span class="ok">是</span>，3 轮独立 browser context 取值完全一致</td></tr>
+  <tr><td>纯 urllib + cookie</td><td><span class="ok">200</span>，87,446 字节，24 条，耗时 1.06 秒，连续 3 次复核一致</td></tr>
+  <tr><td>是否校验 UA</td><td><span class="ok">不校验</span>，Chrome / curl / Firefox-Mac / 无 UA / 仅 cookie 五种组合全部 200 + 24 条</td></tr>
+  <tr><td>海报地址</td><td>页面 <code>src</code> 是占位图，真实封面在 <code>data-original</code>，需补 <code>https://vres.wkcyvs.cn</code>；抽验 HTTP 200，image/jpeg，207,685 字节</td></tr>
+</table>
+
+<div class="note">
+<b>未完全排除的风险：</b>cookie 是否绑定 IP 无法在本机证实。静态值 + 不校验 UA 说明校验很弱，GitHub Actions 上大概率有效，
+但首次云端运行需实测确认（见第五节步骤 3）。
+</div>
+
+<h2>三、代码与配置改动</h2>
+<table>
+  <tr><th>文件</th><th>改动</th><th>是否影响其他源</th></tr>
+  <tr><td><code>src/generate_feed.py</code></td><td><code>fetch()</code> 新增 <code>headers</code> 参数；新增 <code>fetch_cookie_via_browser()</code> / <code>is_usable()</code> / <code>fetch_document()</code>；<code>parse_generic</code> 字段支持独立 <code>base</code></td><td>否。不配 <code>headers</code> / <code>cookie_recovery</code> / 字段 <code>base</code> 时行为与改动前完全一致</td></tr>
+  <tr><td><code>src/generate_feed.py</code></td><td><code>process_source</code> 改为调用 <code>fetch_document()</code></td><td>否。普通源仍走原 <code>fetch()</code>，异常照旧抛出并跳过</td></tr>
+  <tr><td><code>src/sources.json</code></td><td>kkys14 改为 <code>enabled:true</code>、<code>fetch</code> 去掉 browser、url 指向 <code>/label/new.html</code>、增加 <code>headers</code> / <code>cookie_recovery</code>、修正海报正则</td><td>否，仅该源</td></tr>
+  <tr><td><code>README.md</code> / <code>.gitignore</code></td><td>文档同步为 cookie 通道；忽略 kkys14 调试产物</td><td>否</td></tr>
+</table>
+
+<h3>3.1 kkys14 当前配置片段</h3>
+<pre>"headers": {"Cookie": "cdndefend_js_cookie=75CB7DA5…A14423"},
+"cookie_recovery": true,
+"cookie_name": "cdndefend_js_cookie",
+"cookie_wait": 4,
+"fields": {
+  "poster": {"pattern": "data-original=\"(/vod\\d+/vod/[^\"]+)\"",
+             "group": 1, "abs": true, "base": "https://vres.wkcyvs.cn"}
+}</pre>
+
+<h3>3.2 自愈逻辑（已验证）</h3>
+<pre>[测试] 已把 cookie 篡改为错误值
+  🔑 使用自定义请求头直连...
+      ⚠️  直连结果无效（HTTP Error 850: ），尝试用浏览器刷新 cookie...
+      已用新 cookie 重连完成。
+      提取到 24 条</pre>
+
+<h2>四、全量回归结果</h2>
+<table>
+  <tr><th>源</th><th>条目</th><th>状态</th></tr>
+  <tr><td>seedog</td><td>20</td><td class="ok">正常</td></tr>
+  <tr><td>yszzq</td><td>24</td><td class="ok">正常（首次跑命中站点限速，冷却后恢复）</td></tr>
+  <tr><td>yszzq_api</td><td>10</td><td class="ok">正常（过滤「失效」后 10 条）</td></tr>
+  <tr><td>yszzq_jiexi</td><td>11</td><td class="ok">正常（剔除 4 条失效）</td></tr>
+  <tr><td>cctv_jkzl</td><td>50</td><td class="ok">正常</td></tr>
+  <tr><td><b>kkys14</b></td><td><b>24</b></td><td class="ok">新增可用</td></tr>
+</table>
+<p style="font-size:13.5px;color:var(--tx2)">六个 XML 全部通过 XML 良构校验；除 kkys14 外其余文件仅 <code>lastBuildDate</code> 变化，条目内容未受影响。</p>
+
+<h2>五、需要你手动操作的清单</h2>
+<ol>
+  <li><b>确认 cookie 是否提交到公开仓库。</b><code>sources.json</code> 里的 cookie 会随仓库公开。它是站点对所有访客发放的通行证、不涉及你的账号，
+    但公开后可能有被站点察觉并轮换的风险。若不希望公开，需改用 CI Secrets 注入（生成器目前不支持，要再加改动）。</li>
+  <li><b>推送代码。</b>本会话未执行 <code>git push</code>。可在项目目录运行 <code>publish.bat</code>，或手动
+    <code>git add -A &amp;&amp; git commit -m "feat: kkys14 改用 cookie 通道" &amp;&amp; git push origin main</code>。</li>
+  <li><b>云端首跑验证。</b>推送后在 GitHub Actions 页面手动 <b>Run workflow</b>，检查日志中 kkys14 是否
+    <code>提取到 24 条</code>。若出现 <code>HTTP Error 850</code> 且刷新也失败，说明 CI 机器 IP 被拦或未装 playwright，需回来告知我调整。</li>
+  <li><b>订阅地址。</b>Pages 重建约 40~90 秒后生效：
+    <code>https://ghaner.github.io/WebFeedGitHubGenerater/kkys14.xml</code></li>
+  <li><b>日后 cookie 失效怎么办。</b>浏览器打开目标页 → F12 → Application → Cookies →
+    找到 <code>cdndefend_js_cookie</code> 并复制其值 → 替换 <code>sources.json</code> 里
+    <code>headers.Cookie</code> 的值。</li>
+</ol>
+
+<h2>六、探测脚本留存</h2>
+<table>
+  <tr><th>脚本</th><th>用途</th></tr>
+  <tr><td><code>test/probe_kkys14_timeline.py</code></td><td>逐秒采样页面状态，复现 2.9s 内容窗口与 3.9s 跳转</td></tr>
+  <tr><td><code>test/probe_kkys14_cookie_stability.py</code></td><td>多轮取 cookie 并比对一致性，校验同会话请求</td></tr>
+  <tr><td><code>test/verify_kkys14_pure_http.py</code></td><td>纯 urllib 无浏览器通道验证（含连续复核）</td></tr>
+  <tr><td><code>test/verify_kkys14_regex.py</code></td><td>现有正则对真实 HTML 的离线解析验证</td></tr>
+  <tr><td><code>test/probe_kkys14_label.py</code></td><td>目标页网络响应监听与条目统计</td></tr>
+</table>
+
+<div class="foot">本报告数据来自 2026-11-14 17:00–17:12 的实测运行，页面结构或 cookie 策略变化后结论需重新验证。</div>
+
+</div>
+</body>
+</html>

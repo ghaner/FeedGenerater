@@ -28,6 +28,30 @@ from xml.sax.saxutils import escape
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 CONFIG_PATH = os.path.join(SCRIPT_DIR, "sources.json")
+SECRETS_PATH = os.path.join(SCRIPT_DIR, "local_secrets.json")
+
+# ===================== 环境变量注入（cookie 等敏感值不入库） =====================
+def load_local_secrets():
+    """把 src/local_secrets.json 的键值注入环境变量（已存在的不覆盖）。
+    该文件在 .gitignore 中，仅本机使用；云端由 GitHub Actions Secrets 提供同名变量。"""
+    if not os.path.exists(SECRETS_PATH):
+        return
+    try:
+        with open(SECRETS_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        print("⚠️  local_secrets.json 读取失败：%s" % e)
+        return
+    for k, v in data.items():
+        os.environ.setdefault(k, str(v))
+
+
+def expand_env(text):
+    """把 "${VAR}" 替换为环境变量值（未设置则为空串）。不含占位符原样返回。"""
+    if not text or "${" not in text:
+        return text
+    return re.sub(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}",
+                  lambda m: os.environ.get(m.group(1), ""), text)
 
 # ===================== 反爬挑战页特征（命中则跳过该源，保留旧 feed） =====================
 CHALLENGE_MARKERS = [
@@ -115,7 +139,8 @@ def parse_generic(html, cfg):
                 if fc.get("strip_tags"):
                     val = strip_tags(val)
                 if fc.get("abs"):
-                    val = val if val.startswith("http") else base + val
+                    fbase = fc.get("base") or base
+                    val = val if val.startswith("http") else fbase + val
             item[fname] = val
         if "douban_rate" in item:
             item["rate"] = item["douban_rate"] if (item["douban_rate"] and item["douban_rate"] != "0") else "暂无"
@@ -216,8 +241,16 @@ PARSERS = {
 
 
 # ===================== 网络与构建 =====================
-def fetch(url, ua, timeout):
-    req = Request(url, headers={"User-Agent": ua, "Accept-Language": "zh-CN,zh;q=0.9"})
+def fetch(url, ua, timeout, headers=None):
+    """urllib 直连取 HTML。headers 为源级自定义请求头（如 Cookie），值支持 ${VAR}
+    引用环境变量；不传则维持原有行为。"""
+    h = {"User-Agent": ua, "Accept-Language": "zh-CN,zh;q=0.9"}
+    if headers:
+        for k, v in headers.items():
+            v = expand_env(v)
+            if v:
+                h[k] = v
+    req = Request(url, headers=h)
     with urlopen(req, timeout=timeout) as resp:
         raw = resp.read()
     enc = resp.headers.get_content_charset() or "utf-8"
@@ -275,6 +308,97 @@ def fetch_browser(url, ua, timeout, max_wait=40, wait_selector=None, settle=5):
     return html
 
 
+def fetch_cookie_via_browser(cfg, ua, timeout):
+    """用浏览器过一次 JS 挑战，取回指定名称的 cookie（"name=value"）。
+    仅在 cookie 失效自愈时调用；playwright 缺失或取不到则返回 None，不抛异常。"""
+    import time
+    name = cfg.get("cookie_name", "")
+    wait = cfg.get("cookie_wait", 4)
+    value = ""
+    try:
+        from playwright.sync_api import sync_playwright
+    except Exception:
+        print("      ⚠️  未安装 playwright，无法刷新 cookie。")
+        return None
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=["--disable-blink-features=AutomationControlled", "--no-sandbox"],
+            )
+            ctx = browser.new_context(user_agent=ua, locale="zh-CN")
+            page = ctx.new_page()
+            page.goto(cfg["url"], wait_until="domcontentloaded", timeout=timeout * 1000)
+            time.sleep(wait)
+            for c in ctx.cookies():
+                if c["name"] == name:
+                    value = c["value"]
+            browser.close()
+    except Exception as e:
+        print("      ⚠️  浏览器刷新 cookie 失败：%s" % e)
+        return None
+    if not value:
+        print("      ⚠️  浏览器未取到 cookie：%s" % name)
+        return None
+    return "%s=%s" % (name, value)
+
+
+def is_usable(html, parser, cfg):
+    """直连结果是否可用：不含反爬挑战特征，且能解析出条目。"""
+    if any(m in html.lower() for m in CHALLENGE_MARKERS):
+        return False
+    return bool(parser(html, cfg))
+
+
+def fetch_document(cfg, ua, timeout, parser):
+    """按源配置取回页面 HTML。
+    普通源：带自定义请求头直连（异常照旧抛出，交给上层跳过）。
+    配置了 cookie_recovery 的源：直连失败（如 850 挑战）或结果无效（挑战页 / 解析 0 条）时，
+    自动用浏览器刷新 cookie 后重连一次，实现自愈。"""
+    if cfg.get("fetch") == "browser":
+        return fetch_browser(
+            cfg["url"], ua, timeout,
+            max_wait=cfg.get("max_wait", 40),
+            wait_selector=cfg.get("wait_selector"),
+            settle=cfg.get("settle", 5),
+        )
+
+    headers = cfg.get("headers")
+    if headers:
+        missing = []
+        for v in headers.values():
+            missing += [n for n in re.findall(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}", str(v))
+                        if not os.environ.get(n)]
+        if missing:
+            print("      ⚠️  环境变量未设置：%s（对应请求头将被省略）" % ", ".join(missing))
+
+    html = ""
+    error = None
+    try:
+        html = fetch(cfg["url"], ua, timeout, headers)
+    except Exception as e:
+        error = e
+
+    if not cfg.get("cookie_recovery"):
+        if error:
+            raise error
+        return html
+    if html and is_usable(html, parser, cfg):
+        return html
+
+    print("      ⚠️  直连结果无效（%s），尝试用浏览器刷新 cookie..." % (error or "挑战页或 0 条"))
+    cookie = fetch_cookie_via_browser(cfg, ua, timeout)
+    if not cookie:
+        if error:
+            raise error
+        return html
+    headers2 = dict(headers or {})
+    headers2["Cookie"] = cookie
+    html2 = fetch(cfg["url"], ua, timeout, headers2)
+    print("      已用新 cookie 重连完成。")
+    return html2
+
+
 def build_rss(items, cfg):
     now = datetime.datetime.now(datetime.timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000")
     tpl = cfg.get("template", "<div>{title}<br>{link}</div>")
@@ -313,18 +437,12 @@ def process_source(cfg, ua, timeout):
         print("  ❌ 未知 parser: %s，跳过。" % cfg.get("parser"))
         return
 
-    fetch_mode = cfg.get("fetch", "http")
+    if cfg.get("fetch") == "browser":
+        print("  🌐 使用浏览器抓取（攻克 JS 挑战）...")
+    elif cfg.get("headers"):
+        print("  🔑 使用自定义请求头直连...")
     try:
-        if fetch_mode == "browser":
-            print("  🌐 使用浏览器抓取（攻克 JS 挑战）...")
-            html = fetch_browser(
-                cfg["url"], ua, timeout,
-                max_wait=cfg.get("max_wait", 40),
-                wait_selector=cfg.get("wait_selector"),
-                settle=cfg.get("settle", 5),
-            )
-        else:
-            html = fetch(cfg["url"], ua, timeout)
+        html = fetch_document(cfg, ua, timeout, parser)
     except Exception as e:
         print("  ⚠️  抓取失败：%s（跳过，保留旧 feed）" % e)
         return
@@ -355,6 +473,7 @@ def process_source(cfg, ua, timeout):
 
 
 def main():
+    load_local_secrets()
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         conf = json.load(f)
     ua = conf.get("ua", "Mozilla/5.0")
