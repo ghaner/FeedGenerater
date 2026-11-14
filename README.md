@@ -1,4 +1,4 @@
-# 通用「网址 → RSS」生成仓库（FeedGenerater）
+# 通用「网址 → RSS」生成仓库（WebFeedGitHubGenerater）
 
 把任意「按更新排序的列表页」做成可被 **URL 订阅**的 RSS（供 Distill Web Monitor、Feedly、Fluent Reader 等只接受 URL 的阅读器使用）。
 **一个仓库支持多个网址，每个网址生成一个独立的 `<name>.xml`**，新增网址只需改 `sources.json`，无需改代码。
@@ -9,7 +9,7 @@
 
 ## 一、仓库结构
 ```
-FeedGenerater/
+WebFeedGitHubGenerater/
 ├── .github/workflows/generate.yml   # ★ 主生成器：每日零点（北京时间）遍历所有源重新生成各自 *.xml
 ├── src/
 │   ├── generate_feed.py             # 主程序（仅 Python 标准库，无需 pip install）
@@ -46,10 +46,10 @@ FeedGenerater/
 ### 步骤 1：开启 GitHub Pages
 1. 仓库 **Settings → Pages**。
 2. **Build and deployment → Source** 选 **Deploy from a branch**；**Branch** 选 `main`，目录 **`/ (root)`**，保存。
-3. 稍等一两分钟，访问 `https://ghaner.github.io/FeedGenerater/seedog.xml` 应能见到 RSS XML。
+3. 稍等一两分钟，访问 `https://ghaner.github.io/WebFeedGitHubGenerater/seedog.xml` 应能见到 RSS XML。
 4. 把这个 URL 填进 Distill Web Monitor 的 **Feed → GET** 输入框即可订阅。
 
-> 每个源对应一个文件：`https://ghaner.github.io/FeedGenerater/<name>.xml`（name 见 sources.json）。
+> 每个源对应一个文件：`https://ghaner.github.io/WebFeedGitHubGenerater/<name>.xml`（name 见 sources.json）。
 
 ### 步骤 2：保持更新（★ GitHub Action 自动完成）
 无需任何手动操作：`generate.yml` 每 **日零点（北京时间，即 UTC 16:00）** 自动遍历所有启用源 → 抓取 → 重新生成各自 `*.xml` → 提交推送。

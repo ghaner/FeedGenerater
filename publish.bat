@@ -42,5 +42,5 @@ if errorlevel 1 (
 ) else (
   echo [4/4] 各 feed 无变化，无需推送。
 )
-echo 完成。订阅地址形如：https://ghaner.github.io/FeedGenerater/^<name^>.xml（name 见 sources.json）
+echo 完成。订阅地址形如：https://ghaner.github.io/WebFeedGitHubGenerater/^<name^>.xml（name 见 sources.json）
 pause
