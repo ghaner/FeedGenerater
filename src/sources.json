@@ -47,6 +47,25 @@
       "template": "<div style=\"font-family:sans-serif;line-height:1.6;\"><p style=\"margin:0 0 6px;\"><b><a href=\"{link}\" target=\"_blank\">{title}</a></b></p><p style=\"margin:0 0 6px;color:#555;\">支持 CMS：{cms}</p><p style=\"margin:0;color:#888;\">分类：{cats}</p></div>"
     },
     {
+      "name": "yszzq_jiexi",
+      "parser": "generic",
+      "url": "https://www.yszzq.com/ziyuan/jiexi/21_0_0_newstime_0.html",
+      "base": "https://www.yszzq.com",
+      "feed_title": "影视站长圈 解析接口 最近更新",
+      "feed_desc": "影视站长圈（yszzq.com）影视解析接口列表，按「最新排序」的 RSS 订阅源（本地生成）。",
+      "ttl": 60,
+      "item_block": "(<article[^>]*>\\s*<a href=\"https://www\\.yszzq\\.com/ziyuan/jiexi/\\d+\\.html\">.*?</a></article>)",
+      "fields": {
+        "link":   {"pattern": "href=\"([^\"]+)\"", "group": 1, "abs": true},
+        "title":  {"pattern": "<h2>(?:<span[^>]*>.*?</span>)?\\s*(.*?)</h2>", "group": 1, "strip_tags": true},
+        "status": {"pattern": "<h2><span[^>]*>(.*?)</span>", "group": 1, "strip_tags": true},
+        "fee":    {"pattern": "<p>(.*?)</p>", "group": 1, "strip_tags": true},
+        "api":    {"pattern": "<p>.*?</p>\\s*<p>(.*?)</p>", "group": 1, "strip_tags": true},
+        "fmt":    {"pattern": "<p>.*?</p>\\s*<p>.*?</p>\\s*<p>(.*?)</p>", "group": 1, "strip_tags": true}
+      },
+      "template": "<div style=\"font-family:sans-serif;line-height:1.6;\"><p style=\"margin:0 0 6px;\"><b><a href=\"{link}\" target=\"_blank\">{title}</a></b><span style=\"color:#888;font-size:12px;\"> {status}</span></p><p style=\"margin:0 0 6px;color:#555;\">解析地址：<code>{api}</code></p><p style=\"margin:0;color:#888;\">{fee} · {fmt}</p></div>"
+    },
+    {
       "name": "kkys14",
       "parser": "generic",
       "fetch": "browser",

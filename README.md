@@ -14,7 +14,7 @@ FeedGenerater/
 ├── src/
 │   ├── generate_feed.py             # 主程序（仅 Python 标准库，无需 pip install）
 │   └── sources.json                 # ★ 站点配置：新增网址只改这里
-├── seedog.xml                      # 生成的 RSS（seedog.cc，已由 Pages 托管）
+├── *.xml                           # 生成的 RSS（seedog / yszzq / yszzq_api / yszzq_jiexi，已由 Pages 托管）
 ├── test/capture_kkys14.py          # 调试脚本：浏览器抓取（暂停中的 kkys14 后续攻坚用）
 ├── seedog_rss.bat                  # 本机一键生成并打开所有 *.xml（备用预览）
 ├── publish.bat                     # 本机生成 + git 提交 + 推送（备用刷新）
@@ -28,6 +28,7 @@ FeedGenerater/
 | `seedog` | https://seedog.cc/?order=update | `seedog`（专用，已验证） | ✅ 正常，生成 `seedog.xml`（20 条） |
 | `yszzq` | https://www.yszzq.com/ziyuan/web/19_0_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq.xml`（24 条，资源站官网列表） |
 | `yszzq_api` | https://www.yszzq.com/ziyuan/api/20_0_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq_api.xml`（15 条，采集接口列表，标题保留「赞助/失效」状态前缀） |
+| `yszzq_jiexi` | https://www.yszzq.com/ziyuan/jiexi/21_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq_jiexi.xml`（15 条，解析接口列表，含解析地址 / 收费 / 格式，标题旁标「赞助/失效」） |
 | `kkys14` | https://www.kkys14.com/label/new.html（目标页） | `generic` + `fetch:"browser"` | ⏸️ 已暂停（`enabled:false`），暂不出源，原因见下 |
 
 **kkys14 为何暂停**：该站是 **SPA + cdndefend JS 算力挑战**。`urllib` 直连只能拿到 HTTP 850 挑战页；
