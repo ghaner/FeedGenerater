@@ -100,12 +100,14 @@
   <tr><th>文件</th><th>改动</th><th>是否影响其他源</th></tr>
   <tr><td><code>src/generate_feed.py</code></td><td><code>fetch()</code> 新增 <code>headers</code> 参数；新增 <code>fetch_cookie_via_browser()</code> / <code>is_usable()</code> / <code>fetch_document()</code>；<code>parse_generic</code> 字段支持独立 <code>base</code></td><td>否。不配 <code>headers</code> / <code>cookie_recovery</code> / 字段 <code>base</code> 时行为与改动前完全一致</td></tr>
   <tr><td><code>src/generate_feed.py</code></td><td><code>process_source</code> 改为调用 <code>fetch_document()</code></td><td>否。普通源仍走原 <code>fetch()</code>，异常照旧抛出并跳过</td></tr>
-  <tr><td><code>src/sources.json</code></td><td>kkys14 改为 <code>enabled:true</code>、<code>fetch</code> 去掉 browser、url 指向 <code>/label/new.html</code>、增加 <code>headers</code> / <code>cookie_recovery</code>、修正海报正则</td><td>否，仅该源</td></tr>
-  <tr><td><code>README.md</code> / <code>.gitignore</code></td><td>文档同步为 cookie 通道；忽略 kkys14 调试产物</td><td>否</td></tr>
+  <tr><td><code>src/sources.json</code></td><td>kkys14 改为 <code>enabled:true</code>、<code>fetch</code> 去掉 browser、url 指向 <code>/label/new.html</code>、cookie 改为 <code>${KKYS14_COOKIE}</code> 占位符、修正海报正则</td><td>否，仅该源</td></tr>
+  <tr><td><code>src/generate_feed.py</code></td><td>新增 <code>load_local_secrets()</code> / <code>expand_env()</code>：从 <code>src/local_secrets.json</code> 或环境变量注入 cookie，值为空时告警</td><td>否。文件不存在、无占位符时不做任何事</td></tr>
+  <tr><td><code>.github/workflows/generate.yml</code></td><td>生成步骤增加 <code>env: KKYS14_COOKIE: ${{ secrets.KKYS14_COOKIE }}</code></td><td>否，其他源不读该变量</td></tr>
+  <tr><td><code>README.md</code> / <code>.gitignore</code></td><td>文档同步为 cookie 通道 + Secrets 配置；忽略 <code>src/local_secrets.json</code> 与 kkys14 调试产物</td><td>否</td></tr>
 </table>
 
 <h3>3.1 kkys14 当前配置片段</h3>
-<pre>"headers": {"Cookie": "cdndefend_js_cookie=75CB7DA5…A14423"},
+<pre>"headers": {"Cookie": "${KKYS14_COOKIE}"},
 "cookie_recovery": true,
 "cookie_name": "cdndefend_js_cookie",
 "cookie_wait": 4,
@@ -113,6 +115,9 @@
   "poster": {"pattern": "data-original=\"(/vod\\d+/vod/[^\"]+)\"",
              "group": 1, "abs": true, "base": "https://vres.wkcyvs.cn"}
 }</pre>
+<p style="font-size:13.5px">cookie 值<b>不写进仓库</b>：<code>sources.json</code> 只写 <code>${KKYS14_COOKIE}</code> 占位符，
+运行时从环境变量展开。本机由 <code>src/local_secrets.json</code>（已加入 .gitignore）自动注入；
+云端由 GitHub Actions Secret <code>KKYS14_COOKIE</code> 注入。环境变量缺失时日志会明确告警。</p>
 
 <h3>3.2 自愈逻辑（已验证）</h3>
 <pre>[测试] 已把 cookie 篡改为错误值
@@ -125,8 +130,8 @@
 <table>
   <tr><th>源</th><th>条目</th><th>状态</th></tr>
   <tr><td>seedog</td><td>20</td><td class="ok">正常</td></tr>
-  <tr><td>yszzq</td><td>24</td><td class="ok">正常（首次跑命中站点限速，冷却后恢复）</td></tr>
-  <tr><td>yszzq_api</td><td>10</td><td class="ok">正常（过滤「失效」后 10 条）</td></tr>
+  <tr><td>yszzq</td><td>24</td><td class="ok">正常（首次跑命中站点限速，冷却后重跑恢复）</td></tr>
+  <tr><td>yszzq_api</td><td>10</td><td class="warn">本次持续命中站点限速，按设计跳过并保留 12:00 的旧 feed（内容有效，订阅不中断）。改动前同样现象，17:11 曾用新代码成功跑出 10 条</td></tr>
   <tr><td>yszzq_jiexi</td><td>11</td><td class="ok">正常（剔除 4 条失效）</td></tr>
   <tr><td>cctv_jkzl</td><td>50</td><td class="ok">正常</td></tr>
   <tr><td><b>kkys14</b></td><td><b>24</b></td><td class="ok">新增可用</td></tr>
@@ -135,17 +140,18 @@
 
 <h2>五、需要你手动操作的清单</h2>
 <ol>
-  <li><b>确认 cookie 是否提交到公开仓库。</b><code>sources.json</code> 里的 cookie 会随仓库公开。它是站点对所有访客发放的通行证、不涉及你的账号，
-    但公开后可能有被站点察觉并轮换的风险。若不希望公开，需改用 CI Secrets 注入（生成器目前不支持，要再加改动）。</li>
-  <li><b>推送代码。</b>本会话未执行 <code>git push</code>。可在项目目录运行 <code>publish.bat</code>，或手动
-    <code>git add -A &amp;&amp; git commit -m "feat: kkys14 改用 cookie 通道" &amp;&amp; git push origin main</code>。</li>
+  <li><b>在 GitHub 仓库配置 Secret（首次必须）。</b>Settings → Secrets and variables → Actions →
+    <b>New repository secret</b>，名称填 <code>KKYS14_COOKIE</code>，值填
+    <code>cdndefend_js_cookie=75CB7DA5DBA9A7ED39E1EF38401E19B8BBFFD58A14423</code>（完整一行）。</li>
+  <li><b>推送代码。</b>本会话已本地提交 <code>f1a5a34</code>，但 <b>push 三次均失败</b>（代理返回 <code>CONNECT tunnel failed 502</code>，
+    与项目既有记录一致，属环境网络问题）。请在本机执行：<code>git push origin main</code>，或双击 <code>publish.bat</code>。</li>
   <li><b>云端首跑验证。</b>推送后在 GitHub Actions 页面手动 <b>Run workflow</b>，检查日志中 kkys14 是否
-    <code>提取到 24 条</code>。若出现 <code>HTTP Error 850</code> 且刷新也失败，说明 CI 机器 IP 被拦或未装 playwright，需回来告知我调整。</li>
+    <code>提取到 24 条</code>。若出现 <code>HTTP Error 850</code> 且刷新也失败，说明 CI 机器 IP 被拦，需回来告知我调整。</li>
   <li><b>订阅地址。</b>Pages 重建约 40~90 秒后生效：
     <code>https://ghaner.github.io/WebFeedGitHubGenerater/kkys14.xml</code></li>
   <li><b>日后 cookie 失效怎么办。</b>浏览器打开目标页 → F12 → Application → Cookies →
-    找到 <code>cdndefend_js_cookie</code> 并复制其值 → 替换 <code>sources.json</code> 里
-    <code>headers.Cookie</code> 的值。</li>
+    找到 <code>cdndefend_js_cookie</code> 并复制其值，拼成 <code>cdndefend_js_cookie=&lt;值&gt;</code>，
+    更新到 GitHub Secret <code>KKYS14_COOKIE</code> 与本机 <code>src/local_secrets.json</code>。</li>
 </ol>
 
 <h2>六、探测脚本留存</h2>
