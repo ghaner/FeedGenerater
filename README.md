@@ -26,6 +26,7 @@ FeedGenerater/
 | name | 网址 | parser | 状态 |
 |---|---|---|---|
 | `seedog` | https://seedog.cc/?order=update | `seedog`（专用，已验证） | ✅ 正常，生成 `seedog.xml`（20 条） |
+| `yszzq` | https://www.yszzq.com/ziyuan/web/19_0_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq.xml`（24 条，资源站官网列表） |
 | `kkys14` | https://www.kkys14.com/label/new.html（目标页） | `generic` + `fetch:"browser"` | ⏸️ 已暂停（`enabled:false`），暂不出源，原因见下 |
 
 **kkys14 为何暂停**：该站是 **SPA + cdndefend JS 算力挑战**。`urllib` 直连只能拿到 HTTP 850 挑战页；
