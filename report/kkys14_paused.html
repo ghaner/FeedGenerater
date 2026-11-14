@@ -43,7 +43,7 @@
 <div class="wrap">
 
   <h1>暂停 kkys14 源 · 多源引擎状态报告</h1>
-  <div class="meta">仓库 <code>FeedGenerater</code> ｜ 提交 <code>be0529f</code> ｜ 2026-11-01</div>
+  <div class="meta">仓库 <code>WebFeedGitHubGenerater</code> ｜ 提交 <code>be0529f</code> ｜ 2026-11-01</div>
 
   <div class="kpi">
     <div><b>1 个</b><span>当前产出 feed（seedog.xml）</span></div>
@@ -105,7 +105,7 @@
       <li>配置校验：<code>JSON OK, 源数: 2</code>（seedog <code>http</code> / kkys14 <code>false</code>）。</li>
       <li>生成器实跑：seedog <b>提取 20 条</b> → 写入 <code>seedog.xml</code>；kkys14 打印「已在配置中禁用，跳过」。</li>
       <li>产物校验：<code>seedog.xml: 20 条</code>，首条「小城良方」，XML 可解析；仓库根目录<b>仅 1 个</b> <code>.xml</code>，无 kkys14 残留文件。</li>
-      <li>线上订阅（未变）：<span class="url">https://ghaner.github.io/FeedGenerater/seedog.xml</span></li>
+      <li>线上订阅（未变）：<span class="url">https://ghaner.github.io/WebFeedGitHubGenerater/seedog.xml</span></li>
     </ul>
   </div>
 
@@ -132,7 +132,7 @@
           在仓库目录打开 PowerShell / CMD，执行 <code>git push origin main</code>。
           <span style="color:#8a5a00">（本次自动推送失败：本机 <code>http_proxy=127.0.0.1:62259</code> 对 github.com 的 CONNECT 持续返回 502，直连亦不可达，属网络链路问题，非仓库问题。）</span>
           不推送也不影响现有订阅——GitHub 上的 kkys14 本来就是禁用状态，线上 <code>seedog.xml</code> 内容一致。</li>
-      <li><b>确认订阅地址</b>：Distill Web Monitor 里填 <span class="url">https://ghaner.github.io/FeedGenerater/seedog.xml</span>。</li>
+      <li><b>确认订阅地址</b>：Distill Web Monitor 里填 <span class="url">https://ghaner.github.io/WebFeedGitHubGenerater/seedog.xml</span>。</li>
       <li><b>以后要加新网址</b>：只改 <code>src/sources.json</code>（复制 seedog 或 kkys14 条目改 url + 正则），推送即自动生成 <code>&lt;name&gt;.xml</code>。</li>
       <li><b>以后要重启 kkys14</b>：按 README 第六节 5 步走，先调通 SPA 等待再改 <code>enabled:true</code>。</li>
     </ol>
