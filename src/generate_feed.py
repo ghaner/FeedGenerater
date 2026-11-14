@@ -123,6 +123,23 @@ def parse_generic(html, cfg):
     return items
 
 
+def filter_excluded(items, cfg):
+    """按配置剔除条目：cfg.exclude = {"field": 字段名, "values": [命中值...]}。
+    字段值包含任一 values 即丢弃（如 status 为「失效」的解析接口）。未配置则原样返回。"""
+    rule = cfg.get("exclude")
+    if not rule:
+        return items
+    field_name = rule.get("field", "")
+    values = rule.get("values", [])
+    kept = []
+    for it in items:
+        val = str(it.get(field_name, ""))
+        if any(v in val for v in values):
+            continue
+        kept.append(it)
+    return kept
+
+
 PARSERS = {
     "seedog": parse_seedog,
     "generic": parse_generic,
@@ -247,6 +264,10 @@ def process_source(cfg, ua, timeout):
         return
 
     items = parser(html, cfg)
+    raw_count = len(items)
+    items = filter_excluded(items, cfg)
+    if len(items) != raw_count:
+        print("      已按 exclude 规则剔除 %d 条（保留 %d 条）" % (raw_count - len(items), len(items)))
     if cfg.get("limit"):
         items = items[: cfg["limit"]]
     print("      提取到 %d 条" % len(items))

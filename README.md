@@ -27,7 +27,7 @@ FeedGenerater/
 |---|---|---|---|
 | `seedog` | https://seedog.cc/?order=update | `seedog`（专用，已验证） | ✅ 正常，生成 `seedog.xml`（20 条） |
 | `yszzq` | https://www.yszzq.com/ziyuan/web/19_0_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq.xml`（24 条，资源站官网列表） |
-| `yszzq_api` | https://www.yszzq.com/ziyuan/api/20_0_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq_api.xml`（15 条，采集接口列表，标题保留「赞助/失效」状态前缀） |
+| `yszzq_api` | https://www.yszzq.com/ziyuan/api/20_0_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq_api.xml`（**10 条/页，已过滤「失效」接口**，标题旁以灰色小标签标「赞助」） |
 | `yszzq_jiexi` | https://www.yszzq.com/ziyuan/jiexi/21_0_0_newstime_0.html | `generic`（已验证） | ✅ 正常，生成 `yszzq_jiexi.xml`（15 条，解析接口列表，含解析地址 / 收费 / 格式，标题旁标「赞助/失效」） |
 | `kkys14` | https://www.kkys14.com/label/new.html（目标页） | `generic` + `fetch:"browser"` | ⏸️ 已暂停（`enabled:false`），暂不出源，原因见下 |
 

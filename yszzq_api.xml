@@ -3,99 +3,69 @@
   <channel>
     <title>影视站长圈 采集接口 最近更新</title>
     <link>https://www.yszzq.com/ziyuan/api/20_0_0_0_newstime_0.html</link>
-    <description>影视站长圈（yszzq.com）影视资源采集接口列表，按「最新采集」排序的 RSS 订阅源（本地生成）。</description>
+    <description>影视站长圈（yszzq.com）影视资源采集接口列表，按「最新采集」排序的 RSS 订阅源（本地生成，已自动过滤「失效」接口）。</description>
     <language>zh-CN</language>
-    <lastBuildDate>Sat, 14 Nov 2026 02:37:19 +0000</lastBuildDate>
+    <lastBuildDate>Sat, 14 Nov 2026 02:48:54 +0000</lastBuildDate>
     <ttl>60</ttl>
     <item>
-      <title>赞助星夜资源站采集接口</title>
+      <title>星夜资源站采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/254.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/254.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/254.html" target="_blank">赞助星夜资源站采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS / 赤兔CMS / API</p><p style="margin:0;color:#888;">分类：其他</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/254.html" target="_blank">星夜资源站采集接口</a></b><span style="color:#888;font-size:12px;"> 赞助</span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS / 赤兔CMS / API</p><p style="margin:0;color:#888;">分类：其他</p></div>]]></description>
     </item>
     <item>
-      <title>赞助看看资源采集接口</title>
+      <title>看看资源采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/253.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/253.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/253.html" target="_blank">赞助看看资源采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS / 赤兔CMS / API</p><p style="margin:0;color:#888;">分类：其他</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/253.html" target="_blank">看看资源采集接口</a></b><span style="color:#888;font-size:12px;"> 赞助</span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS / 赤兔CMS / API</p><p style="margin:0;color:#888;">分类：其他</p></div>]]></description>
     </item>
     <item>
       <title>厂长资源采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/252.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/252.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/252.html" target="_blank">厂长资源采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/252.html" target="_blank">厂长资源采集接口</a></b><span style="color:#888;font-size:12px;"> </span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
     </item>
     <item>
-      <title>赞助新芒果资源站采集接口</title>
+      <title>新芒果资源站采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/251.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/251.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/251.html" target="_blank">赞助新芒果资源站采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/251.html" target="_blank">新芒果资源站采集接口</a></b><span style="color:#888;font-size:12px;"> 赞助</span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
     </item>
     <item>
-      <title>赞助巨量资源网采集接口</title>
+      <title>巨量资源网采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/250.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/250.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/250.html" target="_blank">赞助巨量资源网采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺 / 体育 / 短视频 / 其他</p></div>]]></description>
-    </item>
-    <item>
-      <title>失效乐播资源采集接口</title>
-      <link>https://www.yszzq.com/ziyuan/api/249.html</link>
-      <guid>https://www.yszzq.com/ziyuan/api/249.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/249.html" target="_blank">失效乐播资源采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS</p><p style="margin:0;color:#888;">分类：明星 / 新闻</p></div>]]></description>
-    </item>
-    <item>
-      <title>失效红楼资源网采集接口</title>
-      <link>https://www.yszzq.com/ziyuan/api/248.html</link>
-      <guid>https://www.yszzq.com/ziyuan/api/248.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/248.html" target="_blank">失效红楼资源网采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms</p><p style="margin:0;color:#888;">分类：其他</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/250.html" target="_blank">巨量资源网采集接口</a></b><span style="color:#888;font-size:12px;"> 赞助</span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺 / 体育 / 短视频 / 其他</p></div>]]></description>
     </item>
     <item>
       <title>大众资源采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/247.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/247.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/247.html" target="_blank">大众资源采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS / 赤兔CMS / API</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/247.html" target="_blank">大众资源采集接口</a></b><span style="color:#888;font-size:12px;"> </span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS / 赤兔CMS / API</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
     </item>
     <item>
       <title>UU资源网采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/246.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/246.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/246.html" target="_blank">UU资源网采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS / API</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
-    </item>
-    <item>
-      <title>失效98资源站</title>
-      <link>https://www.yszzq.com/ziyuan/api/245.html</link>
-      <guid>https://www.yszzq.com/ziyuan/api/245.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/245.html" target="_blank">失效98资源站</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺 / 短视频</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/246.html" target="_blank">UU资源网采集接口</a></b><span style="color:#888;font-size:12px;"> </span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS / API</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
     </item>
     <item>
       <title>西瓜资源采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/244.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/244.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/244.html" target="_blank">西瓜资源采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/244.html" target="_blank">西瓜资源采集接口</a></b><span style="color:#888;font-size:12px;"> </span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 赞片CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
     </item>
     <item>
       <title>无水印资源网采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/243.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/243.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/243.html" target="_blank">无水印资源网采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / API</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 短视频</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/243.html" target="_blank">无水印资源网采集接口</a></b><span style="color:#888;font-size:12px;"> </span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / API</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 短视频</p></div>]]></description>
     </item>
     <item>
-      <title>失效CK百货资源网采集接口</title>
-      <link>https://www.yszzq.com/ziyuan/api/242.html</link>
-      <guid>https://www.yszzq.com/ziyuan/api/242.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/242.html" target="_blank">失效CK百货资源网采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms</p><p style="margin:0;color:#888;">分类：其他</p></div>]]></description>
-    </item>
-    <item>
-      <title>失效789官采资源站采集接口</title>
-      <link>https://www.yszzq.com/ziyuan/api/241.html</link>
-      <guid>https://www.yszzq.com/ziyuan/api/241.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/241.html" target="_blank">失效789官采资源站采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：API</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺</p></div>]]></description>
-    </item>
-    <item>
-      <title>赞助影剧资源网采集接口</title>
+      <title>影剧资源网采集接口</title>
       <link>https://www.yszzq.com/ziyuan/api/240.html</link>
       <guid>https://www.yszzq.com/ziyuan/api/240.html</guid>
-      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/240.html" target="_blank">赞助影剧资源网采集接口</a></b></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS / 赤兔CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺 / 体育 / 短视频 / 新闻</p></div>]]></description>
+      <description><![CDATA[<div style="font-family:sans-serif;line-height:1.6;"><p style="margin:0 0 6px;"><b><a href="https://www.yszzq.com/ziyuan/api/240.html" target="_blank">影剧资源网采集接口</a></b><span style="color:#888;font-size:12px;"> 赞助</span></p><p style="margin:0 0 6px;color:#555;">支持 CMS：苹果cms / 海洋cms / 飞飞cms / 马克斯CMS / 赞片CMS / 赤兔CMS</p><p style="margin:0;color:#888;">分类：电影 / 电视剧 / 动漫 / 综艺 / 体育 / 短视频 / 新闻</p></div>]]></description>
     </item>
   </channel>
 </rss>
