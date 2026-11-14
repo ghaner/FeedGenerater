@@ -30,6 +30,23 @@
       "template": "<div style=\"font-family:sans-serif;line-height:1.6;\"><a href=\"{link}\" target=\"_blank\"><img src=\"{poster}\" alt=\"{title}\" style=\"max-width:120px;float:left;margin:0 12px 8px 0;border-radius:6px;\"></a><p style=\"margin:0 0 6px;\"><b><a href=\"{link}\" target=\"_blank\">{title}</a></b></p><p style=\"margin:0 0 6px;color:#555;\">{meta}</p><div style=\"clear:both;\"></div></div>"
     },
     {
+      "name": "yszzq_api",
+      "parser": "generic",
+      "url": "https://www.yszzq.com/ziyuan/api/20_0_0_0_newstime_0.html",
+      "base": "https://www.yszzq.com",
+      "feed_title": "影视站长圈 采集接口 最近更新",
+      "feed_desc": "影视站长圈（yszzq.com）影视资源采集接口列表，按「最新采集」排序的 RSS 订阅源（本地生成）。",
+      "ttl": 60,
+      "item_block": "(<a href=\"https://www\\.yszzq\\.com/ziyuan/api/\\d+\\.html\"[^>]*>.*?</a>)",
+      "fields": {
+        "link":   {"pattern": "href=\"([^\"]+)\"", "group": 1, "abs": true},
+        "title":  {"pattern": "<h2>(.*?)</h2>", "group": 1, "strip_tags": true},
+        "cms":    {"pattern": "<p>(.*?)</p>", "group": 1, "strip_tags": true},
+        "cats":   {"pattern": "<p>.*?</p>\\s*<p>(.*?)</p>", "group": 1, "strip_tags": true}
+      },
+      "template": "<div style=\"font-family:sans-serif;line-height:1.6;\"><p style=\"margin:0 0 6px;\"><b><a href=\"{link}\" target=\"_blank\">{title}</a></b></p><p style=\"margin:0 0 6px;color:#555;\">支持 CMS：{cms}</p><p style=\"margin:0;color:#888;\">分类：{cats}</p></div>"
+    },
+    {
       "name": "kkys14",
       "parser": "generic",
       "fetch": "browser",
