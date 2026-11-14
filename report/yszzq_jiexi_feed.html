@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>影视站长圈 解析接口 RSS · 交付报告</title>
+<style>
+  :root{ --bg:#f7f8fa; --card:#fff; --bd:#e3e6ea; --tx:#1f2329; --mut:#6b7280; --acc:#2563eb; --ok:#16a34a; --warn:#b45309; --codebg:#0f172a; --codefg:#e2e8f0; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx);line-height:1.7}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+  h1{font-size:24px;margin:0 0 6px}
+  h2{font-size:19px;margin:34px 0 10px;padding-left:10px;border-left:4px solid var(--acc)}
+  h3{font-size:15px;margin:20px 0 8px;color:var(--mut)}
+  .sub{color:var(--mut);margin:0 0 18px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:18px 20px;margin:14px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .ok{color:var(--ok);font-weight:600}
+  .warn{color:var(--warn);font-weight:600}
+  .tag{display:inline-block;background:#eef2ff;color:var(--acc);border-radius:6px;padding:1px 8px;font-size:12px;margin-right:6px}
+  pre{background:var(--codebg);color:var(--codefg);padding:14px 16px;border-radius:10px;overflow:auto;white-space:pre-wrap;word-break:break-all;font-size:12.5px;line-height:1.55;margin:0}
+  .url{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;background:#eef2ff;border:1px solid #dbe4ff;border-radius:8px;padding:10px 12px;word-break:break-all;color:#1e40af}
+  .row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  button{cursor:pointer;background:var(--acc);color:#fff;border:0;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600}
+  button.ghost{background:#eef2ff;color:var(--acc)}
+  table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13.5px}
+  th,td{border:1px solid var(--bd);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f1f4f9}
+  ul,ol{margin:8px 0 8px 22px;padding:0}
+  li{margin:5px 0}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f1f4f9;border-radius:4px;padding:1px 5px;font-size:12.5px}
+  .mut{color:var(--mut)}
+  .step{display:flex;gap:12px;margin:12px 0}
+  .num{flex:0 0 26px;height:26px;border-radius:50%;background:#eef2ff;color:var(--acc);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>影视站长圈 · 解析接口 RSS 交付报告</h1>
+  <p class="sub">目标页：https://www.yszzq.com/ziyuan/jiexi/21_0_0_newstime_0.html ｜ 生成时间：2026-11-14 ｜ 状态：<span class="ok">已上线，公网验证通过</span></p>
+
+  <h2>一、结论与订阅地址</h2>
+  <div class="card">
+    <p style="margin:0 0 8px;"><span class="tag">Feed 名</span><code>yszzq_jiexi</code>　<span class="tag">条数</span><b>11 条</b>（原 15 条，已剔除 4 条「失效」）</p>
+    <div class="url" id="feedUrl">https://ghaner.github.io/FeedGenerater/yszzq_jiexi.xml</div>
+    <div class="row">
+      <button onclick="copyUrl()">复制订阅地址</button>
+      <button class="ghost" onclick="window.open(document.getElementById('feedUrl').textContent,'_blank')">在浏览器打开验证</button>
+      <span id="copied" class="mut" style="font-size:12px;"></span>
+    </div>
+  </div>
+
+  <h2>二、这个源抓的是什么</h2>
+  <div class="card">
+    <p>该站「解析接口」列表是按最新排序的接口清单，每条给出：名称、是否收费、解析地址（带 <code>?url=</code> 参数）、支持的解析格式。页面共 147 条 / 10 页，本源跟踪第 1 页（最新 15 条，过滤后 11 条）。</p>
+    <p class="mut" style="margin-bottom:6px;">页面结构 → 字段映射：</p>
+    <table>
+      <tr><th style="width:34%">页面元素</th><th>含义</th><th style="width:26%">RSS 字段</th></tr>
+      <tr><td><code>&lt;article class="isgood…"&gt;</code></td><td>一个条目块（外层容器）</td><td>item_block</td></tr>
+      <tr><td><code>&lt;h2&gt;</code> + 可选 <code>&lt;span class="ico/ sx"&gt;</code></td><td>接口名称；span 为「赞助」或「失效」标记</td><td>title / status</td></tr>
+      <tr><td>第 1 个 <code>&lt;p&gt;</code></td><td>免费 / 收费</td><td>fee</td></tr>
+      <tr><td>第 2 个 <code>&lt;p&gt;</code></td><td>解析地址（以 <code>?url=</code> 结尾，拼接视频地址即用）</td><td>api</td></tr>
+      <tr><td>第 3 个 <code>&lt;p&gt;</code></td><td>m3u8切片 / 全能通用 / 直链云播 / MP4高清</td><td>fmt</td></tr>
+    </table>
+  </div>
+
+  <h2>三、过滤「失效」是怎么做的</h2>
+  <div class="card">
+    <p>生成器新增可选能力 <code>exclude</code>：命中所配字段值的条目直接丢弃。<b>没有配置该字段的源完全不受影响</b>，所以这次改动不会波及 seedog / yszzq。</p>
+<pre>// src/sources.json —— yszzq_jiexi 片段
+"exclude": {"field": "status", "values": ["失效"]},
+"fields": {
+  "title":  {"pattern": "&lt;h2&gt;(?:&lt;span[^&gt;]*&gt;.*?&lt;/span&gt;)?\\s*(.*?)&lt;/h2&gt;", "strip_tags": true},
+  "status": {"pattern": "&lt;h2&gt;&lt;span[^&gt;]*&gt;(.*?)&lt;/span&gt;", "strip_tags": true},
+  "api":    {"pattern": "&lt;p&gt;.*?&lt;/p&gt;\\s*&lt;p&gt;(.*?)&lt;/p&gt;", "strip_tags": true},
+  "fmt":    {"pattern": "&lt;p&gt;.*?&lt;/p&gt;\\s*&lt;p&gt;.*?&lt;/p&gt;\\s*&lt;p&gt;(.*?)&lt;/p&gt;", "strip_tags": true}
+}</pre>
+    <p class="mut" style="margin-top:10px;">实现位置：<code>src/generate_feed.py</code> 的 <code>filter_excluded(items, cfg)</code>，在解析之后、截断之前执行；运行时会打印「已按 exclude 规则剔除 N 条」。</p>
+  </div>
+
+  <h2>四、当前全部源状态</h2>
+  <div class="card">
+    <table>
+      <tr><th>Feed</th><th>条数</th><th>说明</th></tr>
+      <tr><td><code>seedog.xml</code></td><td>20</td><td>SeedHub 影视&amp;动漫最近更新（专用解析器）</td></tr>
+      <tr><td><code>yszzq.xml</code></td><td>24</td><td>资源站官网列表，含海报</td></tr>
+      <tr><td><code>yszzq_api.xml</code></td><td>10</td><td>采集接口列表，已过滤「失效」</td></tr>
+      <tr><td><code>yszzq_jiexi.xml</code></td><td>11</td><td><b>本次新增</b>：解析接口列表，已过滤「失效」</td></tr>
+      <tr><td><code>kkys14.xml</code></td><td>—</td><td class="mut">已暂停（SPA + cdndefend 挑战未调通），不出源</td></tr>
+    </table>
+  </div>
+
+  <h2>五、你需要手动做的事（3 步）</h2>
+  <div class="card">
+    <div class="step"><div class="num">1</div><div>复制第一节的订阅地址，粘贴进阅读器的「添加订阅 / Add feed by URL」。<br><span class="mut">Distill Web Monitor 走 Feed → GET；Feedly 走 Add Content → RSS；Fluent Reader 直接粘贴。</span></div></div>
+    <div class="step"><div class="num">2</div><div>确认能看到 11 条，每条描述里有「解析地址」和「免费 · m3u8切片」两行。</div></div>
+    <div class="step"><div class="num">3</div><div>无需其他操作：GitHub Actions 每日北京时间零点（UTC 16:00）自动重新抓取、过滤、覆盖发布。</div></div>
+  </div>
+
+  <h3>以后想改规则，只动配置，不动代码</h3>
+  <ul>
+    <li><b>不再过滤失效</b>：删掉该源里的 <code>"exclude"</code> 那一行，重新生成即可恢复 15 条。</li>
+    <li><b>只要免费接口</b>：把 <code>values</code> 改为 <code>["失效"]</code> 所在的字段换成 <code>fee</code>，值写 <code>"收费"</code>。</li>
+    <li><b>再加一个网址</b>：在 <code>src/sources.json</code> 的 <code>sources</code> 数组里照抄一条，改 <code>name / url / item_block / fields</code>，跑 <code>python src/generate_feed.py</code>。</li>
+    <li><b>本机一键</b>：双击 <code>seedog_rss.bat</code> 生成并打开全部 xml；<code>publish.bat</code> 生成并推送。</li>
+  </ul>
+
+  <h2>六、避坑记录</h2>
+  <div class="card">
+    <p><span class="warn">站点会静默限速。</span>同一 IP 短时间内连续抓取，<code>urllib</code> 前 1~2 次成功，之后报 <code>read operation timed out</code> / <code>SSL handshake timed out</code> / <code>WinError 10053</code>，而此时用 <code>curl</code> 访问仍是 200。这不是代码问题，<b>冷却 60 秒后重跑即恢复</b>，不要改代码。</p>
+    <p>生成器的设计是「某源失败就跳过、保留上一次的 feed」，所以偶发超时不会让订阅内容变空。</p>
+    <p class="mut">另外：本仓库提交前需先配仓库级 git 身份；提交应只含本次相关文件，不要把 CI 重生成的无关 xml 混进业务提交。</p>
+  </div>
+
+  <h2>七、本次提交</h2>
+  <div class="card">
+    <table>
+      <tr><th style="width:110px">commit</th><th>内容</th></tr>
+      <tr><td><code>83c4ef5</code></td><td>新增 yszzq_jiexi 源（15 条）</td></tr>
+      <tr><td><code>e725ea2</code></td><td>新增 filter_excluded 过滤能力，并应用至 yszzq_api（15→10）</td></tr>
+      <tr><td><code>35fcdd9</code></td><td>yszzq_jiexi 应用过滤（15→11），刷新 feed 与 README 条数</td></tr>
+    </table>
+    <p class="mut" style="margin-bottom:0;">均已 push 到 <code>main</code>，Pages 已重建，公网文件实测 11 条。</p>
+  </div>
+
+</div>
+<script>
+function copyUrl(){
+  var t = document.getElementById('feedUrl').textContent.trim();
+  var done = function(){ var c=document.getElementById('copied'); c.textContent='已复制'; c.className='ok'; setTimeout(function(){c.textContent='';},1800); };
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(done, function(){fallback(t,done);}); }
+  else { fallback(t,done); }
+}
+function fallback(t,done){
+  var a=document.createElement('textarea'); a.value=t; document.body.appendChild(a); a.select();
+  try{document.execCommand('copy'); done();}catch(e){}
+  document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
