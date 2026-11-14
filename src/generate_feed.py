@@ -123,6 +123,74 @@ def parse_generic(html, cfg):
     return items
 
 
+# ===================== 通用 JSON 接口解析（适用返回 JSON 的列表接口，如 CCTV 栏目接口） =====================
+_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def to_rfc822(dt, tz="+0800"):
+    """datetime → RSS pubDate 字符串（不依赖系统 locale，固定英文缩写）。"""
+    return "%s, %02d %s %04d %02d:%02d:%02d %s" % (
+        _WEEKDAYS[dt.weekday()], dt.day, _MONTHS[dt.month - 1], dt.year,
+        dt.hour, dt.minute, dt.second, tz,
+    )
+
+
+def json_get(obj, path):
+    """按 "data.list" / "data.list.0.title" 这种点号路径取嵌套值；取不到返回 None。"""
+    cur = obj
+    for seg in path.split("."):
+        if isinstance(cur, list):
+            try:
+                cur = cur[int(seg)]
+            except (ValueError, IndexError):
+                return None
+        elif isinstance(cur, dict):
+            cur = cur.get(seg)
+        else:
+            return None
+        if cur is None:
+            return None
+    return cur
+
+
+def parse_json(text, cfg):
+    """通用 JSON 接口解析：items_path 定位条目数组，fields 把 JSON 键映射成模板字段。
+    字段选项：key(JSON 键，支持点号路径) / strip_tags / abs(相对链接补 base) /
+             date(时间格式，如 "%Y-%m-%d %H:%M:%S"，额外生成 pubDate)。
+    站点有 XHR/JSON 接口时优先用它，比正则解析 HTML 稳得多。"""
+    try:
+        data = json.loads(text)
+    except ValueError:
+        return []
+    rows = json_get(data, cfg.get("items_path", "data.list"))
+    if not isinstance(rows, list):
+        return []
+    base = cfg.get("base", "")
+    tz = cfg.get("tz", "+0800")
+    items = []
+    for row in rows:
+        item = {}
+        for fname, fc in cfg.get("fields", {}).items():
+            val = json_get(row, fc["key"])
+            val = "" if val is None else str(val)
+            if fc.get("strip_tags"):
+                val = strip_tags(val)
+            if fc.get("abs") and val and not val.startswith("http"):
+                val = base + val
+            item[fname] = val
+            if fc.get("date") and val:
+                try:
+                    dt = datetime.datetime.strptime(val, fc["date"])
+                    item["pubDate"] = to_rfc822(dt, tz)
+                except ValueError:
+                    item["pubDate"] = ""
+        item.setdefault("pubDate", "")
+        items.append(item)
+    return items
+
+
 def filter_excluded(items, cfg):
     """按配置剔除条目：cfg.exclude = {"field": 字段名, "values": [命中值...]}。
     字段值包含任一 values 即丢弃（如 status 为「失效」的解析接口）。未配置则原样返回。"""
@@ -143,6 +211,7 @@ def filter_excluded(items, cfg):
 PARSERS = {
     "seedog": parse_seedog,
     "generic": parse_generic,
+    "json": parse_json,
 }
 
 
@@ -211,7 +280,7 @@ def build_rss(items, cfg):
     tpl = cfg.get("template", "<div>{title}<br>{link}</div>")
     parts = ['<?xml version="1.0" encoding="UTF-8"?>', '<rss version="2.0">', '  <channel>']
     parts.append('    <title>%s</title>' % escape(cfg["feed_title"]))
-    parts.append('    <link>%s</link>' % escape(cfg.get("url", "")))
+    parts.append('    <link>%s</link>' % escape(cfg.get("feed_link") or cfg.get("url", "")))
     parts.append('    <description>%s</description>' % escape(cfg.get("feed_desc", "")))
     parts.append('    <language>zh-CN</language>')
     parts.append('    <lastBuildDate>%s</lastBuildDate>' % now)
@@ -224,6 +293,8 @@ def build_rss(items, cfg):
         parts.append('      <link>%s</link>' % escape(it.get("link", "")))
         parts.append('      <guid>%s</guid>' % escape(it.get("link", "")))
         parts.append('      <description><![CDATA[%s]]></description>' % desc)
+        if it.get("pubDate"):
+            parts.append('      <pubDate>%s</pubDate>' % escape(it["pubDate"]))
         parts.append('    </item>')
 
     parts.append('  </channel>')

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>新增源 cctv_jkzl · CCTV《健康之路》RSS 交付报告</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --ink:#1a1f27; --sub:#5b6472;
+    --line:#e3e7ee; --ok:#0f7b46; --okbg:#e8f6ee; --warn:#8a5a00; --warnbg:#fdf3e2;
+    --acc:#1f5fbf;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:32px 20px 60px;background:var(--bg);color:var(--ink);
+    font:15px/1.7 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:960px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 6px;letter-spacing:.2px}
+  .meta{color:var(--sub);font-size:13px;margin-bottom:22px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:20px 22px;margin:0 0 16px}
+  h2{font-size:17px;margin:0 0 12px;padding-left:10px;border-left:4px solid var(--acc)}
+  h3{font-size:14.5px;margin:16px 0 6px;color:var(--sub)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--sub);font-weight:600;background:#fafbfc}
+  code{background:#f1f3f6;padding:1px 6px;border-radius:4px;font-size:13px;
+    font-family:Consolas,Monaco,monospace;word-break:break-all}
+  pre{background:#0f172a;color:#e2e8f0;padding:14px 16px;border-radius:8px;overflow:auto;
+    font:12.5px/1.6 Consolas,Monaco,monospace;margin:8px 0 0}
+  .tag{display:inline-block;padding:1px 9px;border-radius:999px;font-size:12px;font-weight:600}
+  .tag.ok{background:var(--okbg);color:var(--ok)}
+  .tag.warn{background:var(--warnbg);color:var(--warn)}
+  .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+  .kpi div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi b{display:block;font-size:20px;margin-bottom:2px}
+  .kpi span{color:var(--sub);font-size:12.5px}
+  ol,ul{margin:6px 0 0;padding-left:22px}
+  li{margin:5px 0}
+  .note{border-left:3px solid var(--warn);background:var(--warnbg);padding:10px 14px;
+    border-radius:0 8px 8px 0;color:#5a3d00;font-size:14px;margin-top:12px}
+  a{color:var(--acc)}
+  .url{word-break:break-all}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>新增源 cctv_jkzl · CCTV《健康之路》RSS 交付报告</h1>
+  <div class="meta">仓库 <code>WebFeedGitHubGenerater</code> ｜ 目标页 <code>https://tv.cctv.com/lm/jkzl/index.shtml</code> ｜ 验证时间 2026-11-14 16:10（北京时间）</div>
+
+  <div class="kpi">
+    <div><b>50 条</b><span>实测提取条目（真实接口数据）</span></div>
+    <div><b>50/50</b><span>link 与 pubDate 字段完整率</span></div>
+    <div><b>1 次</b><span>HTTP 请求即可拿全量，无需浏览器</span></div>
+    <div><b>新增 1 个</b><span>可复用解析器 <code>parser:"json"</code></span></div>
+  </div>
+
+  <div class="card">
+    <h2>一、结论</h2>
+    <ul>
+      <li><b>源已加好并跑通</b>：<code>sources.json</code> 新增 <code>cctv_jkzl</code>，生成 <code>cctv_jkzl.xml</code>，
+          50 条节目、XML 良构、字段无缺失，覆盖 <b>2026-09-25 ~ 2026-11-13</b> 的节目。</li>
+      <li><b>没有走 HTML 正则，而是走了官方 JSON 接口</b>：这个栏目页的节目列表是前端 JS 拉接口渲染的，
+          源码里只有 2 条约稿链接、没有任何列表条目，任何 <code>item_block</code> 正则都无从下手。</li>
+      <li><b>新增通用能力 <code>parser:"json"</code></b>：配置里写 <code>items_path</code> + <code>fields[].key</code> 即可，
+          为「接口型站点」留了标准做法；同时给 RSS 增加了可选 <code>&lt;pubDate&gt;</code>，阅读器可按播出时间排序。</li>
+      <li><b>其它源零影响</b>：新增逻辑只在配置了 <code>parser:"json"</code> 或 <code>pubDate</code> 时生效，
+          seedog / yszzq 三个源行为与之前完全一致（本轮实测各源照常出源）。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>二、接口是怎么找到的（可复现路径）</h2>
+    <ol>
+      <li>抓栏目页 <code>https://tv.cctv.com/lm/jkzl/index.shtml</code>（HTTP 200，UTF-8，约 86 KB）：页面里
+          <code>&lt;h2&gt;</code>、日期、海报全都搜不到，列表区只有一句「正在加载...」→ 判定为 JS 渲染。</li>
+      <li>读页面引用的脚本 <code>index_220402.js</code>，发现列表数据来自：
+          <code>//api.cntv.cn/NewVideo/getVideoListByColumn?id=…&amp;n=20&amp;sort=desc&amp;p=…&amp;mode=…&amp;serviceId=tvcctv</code>。</li>
+      <li>栏目 ID 就在栏目页源码里：<code>var topicID = 'TOPC1451557646802924';</code>（《健康之路》）。</li>
+      <li>直接请求接口（普通 UA 即可，<b>不需要 Referer、不需要 Playwright</b>），返回标准 JSON：
+          <code>data.total</code> / <code>data.list[]</code>，每个条目含
+          <code>title / brief / image / time / length / url / guid</code>。</li>
+      <li>实测参数：<code>n=50</code> 可一次返回 50 条（默认 20），<code>sort=desc</code> 保证最新在前，
+          <code>d=</code> 留空即按时间倒序跨月取。</li>
+    </ol>
+    <pre>GET https://api.cntv.cn/NewVideo/getVideoListByColumn?id=TOPC1451557646802924&amp;n=50&amp;sort=desc&amp;p=1&amp;d=&amp;mode=0&amp;serviceId=tvcctv
+
+{ "data": { "total": 1000, "list": [
+  { "title": "《健康之路》 20261113 管控血糖宜与忌（中）",
+    "brief": "本期节目主要内容：对于糖尿病患者而言……",
+    "image": "https://p4.img.cctvpic.com/fmspic/2026/11/13/9dc0c39f02a442e8bed676ee55e1ff8b-1.jpg",
+    "time":  "2026-11-13 18:05:00",
+    "length":"00:38:44",
+    "url":   "https://tv.cctv.com/2026/11/13/VIDE4xFQWpS7n87smQdQd04G261113.shtml" } ] } }</pre>
+  </div>
+
+  <div class="card">
+    <h2>三、字段映射（JSON → RSS）</h2>
+    <table>
+      <tr><th>RSS 字段</th><th>来源 JSON 键</th><th>处理</th><th>示例</th></tr>
+      <tr><td><code>title</code></td><td><code>title</code></td><td>去标签</td><td>《健康之路》 20261113 管控血糖宜与忌（中）</td></tr>
+      <tr><td><code>link</code> / <code>guid</code></td><td><code>url</code></td><td>补全绝对地址</td><td>https://tv.cctv.com/2026/11/13/VIDE4xFQ…shtml</td></tr>
+      <tr><td><code>pubDate</code></td><td><code>time</code></td><td><code>%Y-%m-%d %H:%M:%S</code> → RFC 822（+0800）</td><td>Fri, 13 Nov 2026 18:05:00 +0800</td></tr>
+      <tr><td>卡片图 <code>poster</code></td><td><code>image</code></td><td>补全绝对地址</td><td>https://p4.img.cctvpic.com/fmspic/2026/11/13/…-1.jpg</td></tr>
+      <tr><td>卡片简介 <code>brief</code></td><td><code>brief</code></td><td>去标签</td><td>本期节目主要内容：……</td></tr>
+      <tr><td>卡片时长 <code>length</code></td><td><code>length</code></td><td>原样</td><td>00:38:44</td></tr>
+      <tr><td><code>&lt;channel&gt;&lt;link&gt;</code></td><td>—</td><td><code>feed_link</code></td><td>https://tv.cctv.com/lm/jkzl/index.shtml</td></tr>
+    </table>
+    <div class="note">说明：<code>&lt;guid&gt;</code> 用详情页绝对 URL，节目不会因重新生成而重复推送；<code>total</code> 上限 1000，本源只要最新 50 条。</div>
+  </div>
+
+  <div class="card">
+    <h2>四、代码改动（两处，均向后兼容）</h2>
+    <h3>1. <code>src/generate_feed.py</code></h3>
+    <ul>
+      <li>新增 <code>parse_json(text, cfg)</code> 并注册进 <code>PARSERS</code>：按 <code>items_path</code> 取数组，
+          按 <code>fields[].key</code> 取字段；字段支持 <code>strip_tags</code> / <code>abs</code> / <code>date</code>。</li>
+      <li>新增 <code>to_rfc822()</code>：自己拼英文星期/月缩写，不依赖系统 locale（避免中文 Windows 输出「周五」）。</li>
+      <li><code>build_rss()</code>：条目有 <code>pubDate</code> 时才输出 <code>&lt;pubDate&gt;</code>；
+          频道链接支持 <code>feed_link</code> 覆盖（不填则沿用 <code>url</code>，老源行为不变）。</li>
+    </ul>
+    <h3>2. <code>src/sources.json</code></h3>
+    <ul>
+      <li>新增 <code>cctv_jkzl</code> 一条配置（约 20 行）；seedog / yszzq 三条原有配置一字未动。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>五、订阅地址</h2>
+    <p class="url"><a href="https://ghaner.github.io/WebFeedGitHubGenerater/cctv_jkzl.xml">https://ghaner.github.io/WebFeedGitHubGenerater/cctv_jkzl.xml</a></p>
+    <div class="note">推送后 GitHub Pages 需 40~90 秒重建，期间访问 404 属正常；先用 Actions 页面
+      <b>Run workflow</b> 或本机 <code>publish.bat</code> 让线上文件就位。</div>
+  </div>
+
+  <div class="card">
+    <h2>六、需要你手动做的（清单）</h2>
+    <ol>
+      <li><b>推送代码</b>：本机已 commit；若沙箱 push 失败，在本仓库目录执行 <code>git push origin main</code>。</li>
+      <li><b>等 Actions 首次跑完</b>：GitHub → Actions → <i>Generate RSS Feeds</i> → <b>Run workflow</b>（或等每日 00:00 北京时间自动跑）。</li>
+      <li><b>订阅</b>：把 <code>https://ghaner.github.io/WebFeedGitHubGenerater/cctv_jkzl.xml</code>
+          填进 Feedly / Fluent Reader / Distill Web Monitor 的 Feed URL。</li>
+      <li><b>换栏目（可选）</b>：改 <code>sources.json</code> 里 <code>url</code> 的 <code>id=</code> 为其它栏目页的
+          <code>topicID</code>，并把 <code>name</code> / <code>feed_title</code> 一起改掉即可开新源。</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>七、本轮踩到的坑</h2>
+    <ul>
+      <li><b>别拿栏目页源码找列表</b>：CCTV 栏目页的节目区是空的（只有「正在加载...」），
+          在 HTML 里数条目永远是 0，白费功夫；直接搜 <code>topicID</code> + 看 <code>index_*.js</code> 更快。</li>
+      <li><b>接口不要 Referer 也能用</b>：加 Referer 反而容易在 CI 里出错，实测裸 UA 直连即 200。</li>
+      <li><b>时区别写错</b>：接口 <code>time</code> 是北京时间，直接写 <code>+0800</code> 即可；
+          若误当 UTC 转换，阅读器里会整体差 8 小时。</li>
+      <li><b>yszzq 限速不可避免</b>：本轮 <code>yszzq_api</code> / <code>yszzq_jiexi</code> 又命中读超时，
+          生成器按设计跳过并保留旧 feed，等冷却后重跑即可，与本源无关。</li>
+    </ul>
+  </div>
+
+  <p class="meta">报告生成：<code>report/cctv_jkzl_feed.html</code> ｜ 数据来源：CCTV 官方栏目接口实测返回（2026-11-14）</p>
+</div>
+</body>
+</html>

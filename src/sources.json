@@ -69,6 +69,27 @@
       "template": "<div style=\"font-family:sans-serif;line-height:1.6;\"><p style=\"margin:0 0 6px;\"><b><a href=\"{link}\" target=\"_blank\">{title}</a></b><span style=\"color:#888;font-size:12px;\"> {status}</span></p><p style=\"margin:0 0 6px;color:#555;\">解析地址：<code>{api}</code></p><p style=\"margin:0;color:#888;\">{fee} · {fmt}</p></div>"
     },
     {
+      "name": "cctv_jkzl",
+      "parser": "json",
+      "url": "https://api.cntv.cn/NewVideo/getVideoListByColumn?id=TOPC1451557646802924&n=50&sort=desc&p=1&d=&mode=0&serviceId=tvcctv",
+      "base": "https://tv.cctv.com",
+      "feed_title": "CCTV《健康之路》最新节目",
+      "feed_desc": "中央电视台《健康之路》栏目最新节目列表（CCTV 官方栏目接口，本地生成，含播出时间与节目简介）。",
+      "feed_link": "https://tv.cctv.com/lm/jkzl/index.shtml",
+      "ttl": 60,
+      "tz": "+0800",
+      "items_path": "data.list",
+      "fields": {
+        "link":   {"key": "url", "abs": true},
+        "title":  {"key": "title", "strip_tags": true},
+        "poster": {"key": "image", "abs": true},
+        "brief":  {"key": "brief", "strip_tags": true},
+        "length": {"key": "length"},
+        "date":   {"key": "time", "date": "%Y-%m-%d %H:%M:%S"}
+      },
+      "template": "<div style=\"font-family:sans-serif;line-height:1.6;\"><a href=\"{link}\" target=\"_blank\"><img src=\"{poster}\" alt=\"{title}\" style=\"max-width:160px;float:left;margin:0 12px 8px 0;border-radius:6px;\"></a><p style=\"margin:0 0 6px;\"><b><a href=\"{link}\" target=\"_blank\">{title}</a></b></p><p style=\"margin:0 0 6px;color:#555;\">{brief}</p><p style=\"margin:0;color:#888;\">播出：{date} · 时长：{length}</p><div style=\"clear:both;\"></div></div>"
+    },
+    {
       "name": "kkys14",
       "parser": "generic",
       "fetch": "browser",
